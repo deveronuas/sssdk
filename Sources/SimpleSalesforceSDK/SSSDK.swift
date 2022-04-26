@@ -1,7 +1,6 @@
 import Foundation
 import SwiftUI
 
-@available(macOS 10.15, *)
 @available(iOS 14.0, *)
 
 public enum ConfigurationError : Error {
@@ -16,14 +15,15 @@ public class SSSDK {
   private var clientId : String?
   private var clientSecret : String?
 
+  //Saves configuration data in memory, of a shared instance
   public func configure(host: String, redirectUri: String, clientId: String, clientSecret: String) {
     self.host = host
     self.redirectUri = redirectUri
     self.clientId = clientId
     self.clientSecret = clientSecret
   }
-
-  public func login() throws -> some View {
+// returns login view with the configured host and redirectUri
+  public func loginView() throws -> some View {
     guard let host = host, let clientId = clientId, let redirectUri = redirectUri else {
       throw ConfigurationError.runtimeError("SSSDK not configured yet")
     }
@@ -36,7 +36,7 @@ public class SSSDK {
 
     return LoginView(url: url)
   }
-
+//This method should be called in your app's handler for the auth redirect URI. It will extract the access_token, refresh_token and save them to keychain. It also uses Salesforce's introspection endpoint to fetch and store the expiry of the access_token and saves it to keychain.
   public func handleAuthRedirect(urlReceived: URL) throws {
     let url = urlReceived.absoluteString
     var urlComponents: URLComponents? = URLComponents(string: url)
@@ -55,11 +55,11 @@ public class SSSDK {
       }
     }
   }
-
+//Erases access token, refresh token and expiry date from keychain
   public func logout() {
     KeychainStore.clearAll()
   }
-
+//Refreshes the access_token, then update it in the keychain. It also uses Salesforce's introspection endpoint to fetch and store the expiry of the access_token and saves it to keychain.
   public func refershAccessToken() throws {
     guard let host = host, let clientId = clientId, let clientSecret = clientSecret else {
       throw ConfigurationError.runtimeError("SSSDK not configured yet")
@@ -75,7 +75,7 @@ public class SSSDK {
     }
     
     guard let accessToken = KeychainStore.accessToken else {
-      return // TODO: Return / throw an intelligent error
+      throw ConfigurationError.runtimeError("Access Token missing")
     }
     guard let refreshToken = KeychainStore.refreshToken else { return }
     

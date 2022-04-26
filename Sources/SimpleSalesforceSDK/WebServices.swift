@@ -4,7 +4,7 @@ class WebServices {
   static let shared = WebServices()
   
   private init() {}
-  
+  // requests the data using SOQL Query from the salesforce database
   func fetchData(host: String, clientId: String, clientSecret: String, refreshToken: String, accessToken: String, query: String, completionHandler: @escaping ((Data?) -> Void)) {
 
     let bearerAccessToken = "Bearer \(accessToken)"
@@ -17,7 +17,7 @@ class WebServices {
     request.httpMethod = "GET"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.setValue(bearerAccessToken,forHTTPHeaderField: "Authorization")
-    
+    // checks weather the accessToken is expired or not
     guard let expiry = KeychainStore.accessTokenExpiryDate, expiry > Date.now else {
       completionHandler(nil)
       return
@@ -44,14 +44,14 @@ class WebServices {
     })
     task.resume()
   }
-
+  // to get the meta information surrounding the token, including whether this token is currently active, expiry, originally issued, this token is not to be used before
   func interospectAccessToken(host: String, clientId: String, clientSecret: String, accessToken: String){
     guard let url = URL(string:"\(host)/oauth2/introspect") else { return }
 
     let params = "token=\(accessToken)" +
-      "&client_id=\(clientId)" +
-      "&client_secret=\(clientSecret)" +
-      "&token_type_hint=access_token"
+    "&client_id=\(clientId)" +
+    "&client_secret=\(clientSecret)" +
+    "&token_type_hint=access_token"
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -80,11 +80,11 @@ class WebServices {
     })
     task.resume()
   }
-
+  // requests the new access token and also request the information of the access token and stores it to Keychain
   func refreshAccessToken(host: String, clientId: String, clientSecret: String, refreshToken: String) {
     let params : String  = "grant_type=refresh_token" +
-      "&client_id=\(clientId)" +
-      "&refresh_token=\(refreshToken)"
+    "&client_id=\(clientId)" +
+    "&refresh_token=\(refreshToken)"
 
     guard let url = URL(string: "\(host)/oauth2/token") else { return }
 
