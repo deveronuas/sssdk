@@ -1,39 +1,46 @@
 import Foundation
 import SwiftUI
-import SwiftKeychainWrapper
 
 @available(macOS 10.15, *)
 @available(iOS 14.0, *)
+
+public enum ConfigurationError : Error {
+  case runtimeError(String)
+}
+
 public class SSSDK {
   public static let shared = SSSDK()
-  private var host = ""
-  private var redirectUri = ""
-  private var clientId = ""
-  private var clientSecret = ""
+  
+  private var host : String?
+  private var redirectUri : String?
+  private var clientId : String?
+  private var clientSecret : String?
 
-  public func configure(host: String, redirectUri: String, clientId: String, clientSecret: String){
-    KeychainWrapper.standard.set(host, forKey:"SSSDK_host")
-    KeychainWrapper.standard.set(clientId, forKey:"SSSDK_clientId")
-    KeychainWrapper.standard.set(clientSecret, forKey:"SSSDK_clientSecret")
+  public func configure(host: String, redirectUri: String, clientId: String, clientSecret: String) {
     self.host = host
     self.redirectUri = redirectUri
     self.clientId = clientId
     self.clientSecret = clientSecret
   }
 
-  public func login() -> some View{
+  public func login() throws -> some View {
+    guard let host = host, let clientId = clientId, let redirectUri = redirectUri else {
+      throw ConfigurationError.runtimeError("SSSDK not configured yet")
+    }
+    
     let url = URL(string: "\(host)/oauth2/authorize?" +
                   "response_type=token" +
                   "&client_id=\(clientId)" +
                   "&redirect_uri=\(redirectUri)" +
                   "&mystate=mystate")!
 
-    return LogInView(url: url)
+    return LoginView(url: url)
   }
 
-  public func handleAuthRedirect(urlReceived: URL){
+  public func handleAuthRedirect(urlReceived: URL) throws {
     let url = urlReceived.absoluteString
     var urlComponents: URLComponents? = URLComponents(string: url)
+    
     if let fragment = urlComponents?.fragment{
       urlComponents?.query = fragment
       if let queryItems = urlComponents?.queryItems{
@@ -43,28 +50,37 @@ public class SSSDK {
         let accessToken = (temp["access_token"] ?? "")  as String
         let refreshToken = ((temp["refresh_token"] ?? "") as String)
 
-        KeychainWrapper.standard.set(accessToken, forKey:"SSSDK_accessToken")
-        KeychainWrapper.standard.set(refreshToken, forKey:"SSSDK_refreshToken")
+        KeychainStore.setAccessToken(accessToken)
+        KeychainStore.setRefreshToken(refreshToken)
       }
     }
   }
 
-  public func logout(){
-    KeychainWrapper.standard.removeObject(forKey:"SSSDK_accessToken")
-    KeychainWrapper.standard.removeObject(forKey:"SSSDK_accessTokenExpiryDate")
-    KeychainWrapper.standard.removeObject(forKey:"SSSDK_refreshToken")
-    KeychainWrapper.standard.removeObject(forKey:"SSSDK_host")
-    KeychainWrapper.standard.removeObject(forKey:"SSSDK_clientId")
-    KeychainWrapper.standard.removeObject(forKey:"SSSDK_clientSecret")
+  public func logout() {
+    KeychainStore.clearAll()
   }
 
-  public func refershAccessToken() {
-    WebServices.shared.refreshAccessToken()
+  public func refershAccessToken() throws {
+    guard let host = host, let clientId = clientId, let clientSecret = clientSecret else {
+      throw ConfigurationError.runtimeError("SSSDK not configured yet")
+    }
+    guard let refreshToken = KeychainStore.refreshToken else { return }
+    
+    WebServices.shared.refreshAccessToken(host: host, clientId: clientId, clientSecret: clientSecret, refreshToken: refreshToken)
   }
 
-  public func fetchData(by query: String, completionHandler: ((Data) -> Void)?) {
-    WebServices.shared.fetchData(by: query){ data in
-      completionHandler!(data)
+  public func fetchData(by query: String, completionHandler: @escaping ((Data?) -> Void)) throws {
+    guard let host = host, let clientId = clientId, let clientSecret = clientSecret else {
+      throw ConfigurationError.runtimeError("SSSDK not configured yet")
+    }
+    
+    guard let accessToken = KeychainStore.accessToken else {
+      return // TODO: Return / throw an intelligent error
+    }
+    guard let refreshToken = KeychainStore.refreshToken else { return }
+    
+    WebServices.shared.fetchData(host: host, clientId: clientId, clientSecret: clientSecret, refreshToken: refreshToken, accessToken: accessToken, query: query) { data in
+      completionHandler(data)
     }
   }
 }

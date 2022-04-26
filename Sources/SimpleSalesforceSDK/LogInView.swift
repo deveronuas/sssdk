@@ -1,6 +1,6 @@
 import SwiftUI
 
-public struct LogInView: View {
+public struct LoginView: View {
   public let url : URL
   public init (url : URL){
     self.url = url
@@ -8,14 +8,14 @@ public struct LogInView: View {
 
   @available(macOS 10.15, *)
   public var body: some View {
-     Text("t")
+     SafariView(url: url)
   }
 }
 
-public struct LogInView_Previews: PreviewProvider {
+public struct LoginView_Previews: PreviewProvider {
   @available(macOS 10.15, *)
   public static var previews: some View {
-    LogInView(url: URL(string: "https://www.google.com")!)
+    LoginView(url: URL(string: "https://www.google.com")!)
   }
 }
 

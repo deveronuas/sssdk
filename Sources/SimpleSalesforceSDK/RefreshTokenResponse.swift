@@ -22,5 +22,4 @@ struct RefreshTokenResponse : Decodable{
     case tokenType = "token_type"
     case issuedAt = "issued_at"
   }
-
 }
