@@ -1,7 +1,7 @@
 import Foundation
 import SwiftKeychainWrapper
 
-struct KeychainStore {
+struct KeychainService {
   static let KEY_ACCESS_TOKEN = "SSSDK_accessToken"
   static let KEY_ACCESS_TOKEN_EXPIRY = "SSSDK_accessTokenExpiryDate"
   static let KEY_REFRESH_TOKEN = "SSSDK_refreshToken"

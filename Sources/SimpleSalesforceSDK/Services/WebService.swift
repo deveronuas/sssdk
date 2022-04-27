@@ -1,10 +1,15 @@
 import Foundation
 
-class WebServices {
-  static let shared = WebServices()
+/// WebService class handles the networking to the Salesforce API.
+/// For More information you can use [Salesforce article on OAuth 2.0 flow]:(https://help.salesforce.com/s/articleView?id=sf.remoteaccess_oauth_flows.htm&type=5)
+
+class WebService {
+  /// Default WebService access
+  static let shared = WebService()
   
   private init() {}
-  // requests the data using SOQL Query from the salesforce database
+
+  /// Requests the data using SOQL Query from the salesforce database.
   func fetchData(host: String, clientId: String, clientSecret: String, refreshToken: String, accessToken: String, query: String, completionHandler: @escaping ((Data?) -> Void)) {
 
     let bearerAccessToken = "Bearer \(accessToken)"
@@ -17,8 +22,8 @@ class WebServices {
     request.httpMethod = "GET"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.setValue(bearerAccessToken,forHTTPHeaderField: "Authorization")
-    // checks weather the accessToken is expired or not
-    guard let expiry = KeychainStore.accessTokenExpiryDate, expiry > Date.now else {
+    // Checks weather the accessToken is expired or not
+    guard let expiry = KeychainService.accessTokenExpiryDate, expiry > Date.now else {
       completionHandler(nil)
       return
     }
@@ -44,8 +49,15 @@ class WebServices {
     })
     task.resume()
   }
-  // to get the meta information surrounding the token, including whether this token is currently active, expiry, originally issued, this token is not to be used before
-  func interospectAccessToken(host: String, clientId: String, clientSecret: String, accessToken: String){
+
+  ///  To check the current state of an OAuth 2.0 access or refresh token
+  /// - Parameters:
+  ///     - host: The Salesforce instance’s endpoint.
+  ///     - clientId: Client identifier for the OAuth 2.0 client.
+  ///     - clientSecret : Client Secret for the OAuth 2.0 client.
+  ///     - accessToken : The access token issued by the authorization server.
+  /// - Returns: The meta information surrounding the token, including whether this token is currently active, expiry, originally issued, this token is not to be used before.
+  func interospectAccessToken(host: String, clientId: String, clientSecret: String, accessToken: String) {
     guard let url = URL(string:"\(host)/oauth2/introspect") else { return }
 
     let params = "token=\(accessToken)" +
@@ -71,7 +83,7 @@ class WebServices {
             let responseData = try decoder.decode(IntrospectResponse.self, from: data)
             
             let expiryDate = Date(timeIntervalSince1970: TimeInterval(responseData.accessTokenExpiryDate))
-            KeychainStore.setAccessTokenExpiryDate(expiryDate)
+            KeychainService.setAccessTokenExpiryDate(expiryDate)
           } catch {
             print(error.localizedDescription)
           }
@@ -80,7 +92,7 @@ class WebServices {
     })
     task.resume()
   }
-  // requests the new access token and also request the information of the access token and stores it to Keychain
+  /// returns the new access token and also requests the information of the access token and stores it to Keychain
   func refreshAccessToken(host: String, clientId: String, clientSecret: String, refreshToken: String) {
     let params : String  = "grant_type=refresh_token" +
     "&client_id=\(clientId)" +
@@ -107,7 +119,7 @@ class WebServices {
             decoder.dateDecodingStrategy = .secondsSince1970
             let responseData = try decoder.decode(RefreshTokenResponse.self, from: data)
             
-            KeychainStore.setAccessToken(responseData.accessToken)
+            KeychainService.setAccessToken(responseData.accessToken)
             self.interospectAccessToken(host: host, clientId: clientId, clientSecret: clientSecret, accessToken: responseData.accessToken)
           } catch {
             print(error.localizedDescription)
