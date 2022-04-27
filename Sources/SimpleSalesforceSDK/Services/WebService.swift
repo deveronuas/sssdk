@@ -28,20 +28,18 @@ class WebService {
       return
     }
     
-    let task = URLSession.shared.dataTask(with: request , completionHandler: { data, response, error in
+    let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
       guard let response = response as? HTTPURLResponse else {return}
-      if (200...299).contains(response.statusCode){
+      if (200...299).contains(response.statusCode) {
         if let error = error {
           print(error.localizedDescription)
         } else {
           guard let data = data else { return }
           completionHandler(data)
         }
-      }
-      else if (400...499).contains(response.statusCode){
+      } else if (400...499).contains(response.statusCode) {
         self.refreshAccessToken(host: host, clientId: clientId, clientSecret: clientSecret, refreshToken: refreshToken)
-      }
-      else {
+      } else {
         if let error = error {
           print(error.localizedDescription)
         }
@@ -56,9 +54,12 @@ class WebService {
   ///     - clientId: Client identifier for the OAuth 2.0 client.
   ///     - clientSecret : Client Secret for the OAuth 2.0 client.
   ///     - accessToken : The access token issued by the authorization server.
-  /// - Returns: The meta information surrounding the token, including whether this token is currently active, expiry, originally issued, this token is not to be used before.
+  /// - Returns: The meta information surrounding the token,
+  ///            including whether this token is currently active,
+  ///            expiry, originally issued,
+  ///            this token is not to be used before.
   func interospectAccessToken(host: String, clientId: String, clientSecret: String, accessToken: String) {
-    guard let url = URL(string:"\(host)/oauth2/introspect") else { return }
+    guard let url = URL(string: "\(host)/oauth2/introspect") else { return }
 
     let params = "token=\(accessToken)" +
     "&client_id=\(clientId)" +
@@ -70,13 +71,13 @@ class WebService {
     request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
     request.httpBody = params.data(using: .utf8)
 
-    let task = URLSession.shared.dataTask(with: request , completionHandler: { data, response, error in
+    let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
       guard let response = response as? HTTPURLResponse else {return}
 
       if let error = error {
         print(error.localizedDescription)
       } else {
-        if (200...299).contains(response.statusCode){
+        if (200...299).contains(response.statusCode) {
           guard let data = data else { return }
           do {
             let decoder = JSONDecoder()
@@ -94,7 +95,7 @@ class WebService {
   }
   /// returns the new access token and also requests the information of the access token and stores it to Keychain
   func refreshAccessToken(host: String, clientId: String, clientSecret: String, refreshToken: String) {
-    let params : String  = "grant_type=refresh_token" +
+    let params: String  = "grant_type=refresh_token" +
     "&client_id=\(clientId)" +
     "&refresh_token=\(refreshToken)"
 
@@ -105,14 +106,13 @@ class WebService {
     request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
     request.httpBody = params.data(using: .utf8)
 
-    let task = URLSession.shared.dataTask(with: request , completionHandler: { data, response, error in
+    let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
       guard let response = response as? HTTPURLResponse else {return}
 
-      if (200...299).contains(response.statusCode){
+      if (200...299).contains(response.statusCode) {
         if let error = error {
           print(error.localizedDescription)
-        }
-        else {
+        } else {
           guard let data = data else { return }
           do {
             let decoder = JSONDecoder()

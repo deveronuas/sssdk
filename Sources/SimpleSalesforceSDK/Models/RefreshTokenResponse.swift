@@ -1,15 +1,15 @@
 import Foundation
 
 struct RefreshTokenResponse : Decodable{
-  let accessToken : String
-  let sfdcCommunityUrl : String
-  let sfdcCommunityId : String
-  let signature : String
-  let scope : String
-  let instanceUrl : String
-  let id : String
+  let accessToken: String
+  let sfdcCommunityUrl: String
+  let sfdcCommunityId: String
+  let signature: String
+  let scope: String
+  let instanceUrl: String
+  let id: String
   let tokenType: String
-  let issuedAt : String
+  let issuedAt: String
 
   enum CodingKeys: String, CodingKey {
     case accessToken =  "access_token"

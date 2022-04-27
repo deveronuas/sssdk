@@ -1,8 +1,8 @@
 import SwiftUI
 
 public struct LoginView: View {
-  public let url : URL
-  public init (url : URL){
+  public let url: URL
+  public init (url: URL){
     self.url = url
   }
 

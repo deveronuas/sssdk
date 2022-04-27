@@ -3,7 +3,7 @@ import SwiftUI
 
 @available(iOS 14.0, *)
 // custom runtime error
-public enum ConfigurationError : Error {
+public enum ConfigurationError: Error {
   case runtimeError(String)
 }
 
@@ -13,16 +13,19 @@ public enum ConfigurationError : Error {
 /// This OAuth 2.0 flow can replace the Salesforce's connected mobile SDK,
 /// by that you can directly utilize the salesforce API without the Salesforce's connected mobile SDK.
 ///
+/// Once authenticated, you can also use this class to make API calls to Salesforce.
 public class SSSDK {
   /// Default SSSDK access
   public static let shared = SSSDK()
 
   // MARK: Representation Properties
 
-  private var host : String?
-  private var redirectUri : String?
-  private var clientId : String?
-  private var clientSecret : String?
+  private var host: String?
+  private var redirectUri: String?
+  private var clientId: String?
+  private var clientSecret: String?
+
+  private init() {}
 
   /// Saves configuration data in memory, of a shared instance
   /// - Parameters:
@@ -34,7 +37,8 @@ public class SSSDK {
   ///        For redirectUri you have to create URL scheme.
   ///        This way, any URL with this scheme would start your App.
   ///        To do so, go to your project file in Xcode.
-  ///        Select your target, go to “Info,” and scroll down until you find “URL Types.” Hit the + button, and add your scheme under “URL schemes.”
+  ///        Select your target, go to “Info,” and scroll down until you find “URL Types.”
+  ///         Hit the + button, and add your scheme under “URL schemes.”
   public func configure(host: String, redirectUri: String, clientId: String, clientSecret: String) {
     self.host = host
     self.redirectUri = redirectUri
@@ -57,7 +61,8 @@ public class SSSDK {
 
     return LoginView(url: url)
   }
-  /// This method should be called in your app's handler for the auth redirect URI. It will extract the access_token, refresh_token and save them to keychain.
+  /// This method should be called in your app's handler for the auth redirect URI.
+  /// It will extract the access_token, refresh_token and save them to keychain.
   /// - Parameters:
   ///     - urlReceived:  Salesforce redirected callback URL.
   /// - Note:
@@ -65,14 +70,15 @@ public class SSSDK {
   ///      Whereas you could simply implement onOpenURL on any View that might need it,
   ///      it’s not a good idea — you’ll most likely be repeating code to handle the deep link,
   ///      that is, to determine the action to be performed for a particular link.
-  ///      My proposed solution is to use App to do this handling and use the environment to propagate the link and react to that change accordingly.
+  ///      My proposed solution is to use App to do this handling and use the environment
+  ///      to propagate the link and react to that change accordingly.
   public func handleAuthRedirect(urlReceived: URL) {
     let url = urlReceived.absoluteString
     var urlComponents: URLComponents? = URLComponents(string: url)
     
-    if let fragment = urlComponents?.fragment{
+    if let fragment = urlComponents?.fragment {
       urlComponents?.query = fragment
-      if let queryItems = urlComponents?.queryItems{
+      if let queryItems = urlComponents?.queryItems {
         let temp = queryItems.reduce(into: [String: String]()) { (result, item) in
           result[item.name] = item.value
         }
@@ -107,7 +113,7 @@ public class SSSDK {
   }
 
   public func fetchData(by query: String, completionHandler: @escaping ((Data?) -> Void)) throws {
-    ///checks weather the SSSDK configured or not
+    /// checks weather the SSSDK configured or not
     guard let host = host, let clientId = clientId, let clientSecret = clientSecret else {
       throw ConfigurationError.runtimeError("SSSDK not configured yet")
     }
