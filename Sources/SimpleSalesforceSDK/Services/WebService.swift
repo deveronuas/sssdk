@@ -1,17 +1,24 @@
 import Foundation
 
-/// WebService class handles the networking to the Salesforce API.
-/// For More information you can use [Salesforce article on OAuth 2.0 flow]:(https://help.salesforce.com/s/articleView?id=sf.remoteaccess_oauth_flows.htm&type=5)
-
+/// This singleton class handles the communication with Salesforce API
+/// For more information read
+/// [Salesforce article on OAuth 2.0 flow](https://help.salesforce.com/s/articleView?id=sf.remoteaccess_oauth_flows.htm&type=5)
 class WebService {
-  /// Default WebService access
+  /// WebService is a singleton, use this variable to access it's methods
   static let shared = WebService()
   
   private init() {}
 
-  /// Requests the data using SOQL Query from the salesforce database.
-  func fetchData(host: String, clientId: String, clientSecret: String, refreshToken: String, accessToken: String, query: String, completionHandler: @escaping ((Data?) -> Void)) {
-
+  /// Requests the data using SOQL Query from the salesforce
+  /// - Parameters:
+  ///     - host: The Salesforce instance’s endpoint.
+  ///     - clientId: Client Id for the OAuth 2.0 client.
+  ///     - clientSecret: Client Secret for the OAuth 2.0 client (optional).
+  ///     - refreshToken: The refresh token issued to the client.
+  ///     - accessToken: The access token issued by salesforce.
+  ///     - query: SOQL query to fetch the data.
+  ///     - completionHandler: Completion handler called when data fetch succeeds `data` is the optional Data from the salesforce.
+  func fetchData(host: String, clientId: String, clientSecret: String?, refreshToken: String, accessToken: String, query: String, completionHandler: @escaping ((Data?) -> Void)) {
     let bearerAccessToken = "Bearer \(accessToken)"
     let url = "\(host)/data/v54.0/query/?q="
     let fetchQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
@@ -22,7 +29,7 @@ class WebService {
     request.httpMethod = "GET"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.setValue(bearerAccessToken,forHTTPHeaderField: "Authorization")
-    // Checks weather the accessToken is expired or not
+    
     guard let expiry = KeychainService.accessTokenExpiryDate, expiry > Date.now else {
       completionHandler(nil)
       return
@@ -48,23 +55,26 @@ class WebService {
     task.resume()
   }
 
-  ///  To check the current state of an OAuth 2.0 access or refresh token
+  ///  To check the current state of an OAuth 2.0 access token and store expiry it to Keychain
   /// - Parameters:
   ///     - host: The Salesforce instance’s endpoint.
   ///     - clientId: Client identifier for the OAuth 2.0 client.
-  ///     - clientSecret : Client Secret for the OAuth 2.0 client.
+  ///     - clientSecret : Client Secret for the OAuth 2.0 client (optional)
   ///     - accessToken : The access token issued by the authorization server.
-  /// - Returns: The meta information surrounding the token,
-  ///            including whether this token is currently active,
-  ///            expiry, originally issued,
-  ///            this token is not to be used before.
-  func interospectAccessToken(host: String, clientId: String, clientSecret: String, accessToken: String) {
+  ///
+  /// This method fetches the meta information, from salesforce, surrounding the access token.
+  /// Including whether this token is currently active, expiry, originally issued, this token is not
+  /// to be used before.
+  func interospectAccessToken(host: String, clientId: String, clientSecret: String?, accessToken: String) {
     guard let url = URL(string: "\(host)/oauth2/introspect") else { return }
 
-    let params = "token=\(accessToken)" +
-    "&client_id=\(clientId)" +
-    "&client_secret=\(clientSecret)" +
-    "&token_type_hint=access_token"
+    var params = "token=\(accessToken)" +
+      "&client_id=\(clientId)" +
+      "&token_type_hint=access_token"
+    
+    if let clientSecret = clientSecret {
+      params += "&client_secret=\(clientSecret)"
+    }
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -93,11 +103,19 @@ class WebService {
     })
     task.resume()
   }
-  /// returns the new access token and also requests the information of the access token and stores it to Keychain
-  func refreshAccessToken(host: String, clientId: String, clientSecret: String, refreshToken: String) {
+  
+  /// Fetches a new access token and stores it to Keychain
+  /// - Parameters:
+  ///     - host: The Salesforce instance’s endpoint.
+  ///     - clientId: Client identifier for the OAuth 2.0 client.
+  ///     - clientSecret : Client Secret for the OAuth 2.0 client (optional).
+  ///     - accessToken : The access token issued by the authorization server.
+  ///
+  /// This will also call `interospectAccessToken` to reset the expiry
+  func refreshAccessToken(host: String, clientId: String, clientSecret: String?, refreshToken: String) {
     let params: String  = "grant_type=refresh_token" +
-    "&client_id=\(clientId)" +
-    "&refresh_token=\(refreshToken)"
+      "&client_id=\(clientId)" +
+      "&refresh_token=\(refreshToken)"
 
     guard let url = URL(string: "\(host)/oauth2/token") else { return }
 

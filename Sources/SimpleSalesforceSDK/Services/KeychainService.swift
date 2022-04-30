@@ -1,6 +1,7 @@
 import Foundation
 import SwiftKeychainWrapper
 
+/// This singleton class handles the saving and retrieval from Keychain
 struct KeychainService {
   static let KEY_ACCESS_TOKEN = "SSSDK_accessToken"
   static let KEY_ACCESS_TOKEN_EXPIRY = "SSSDK_accessTokenExpiryDate"
@@ -42,6 +43,9 @@ struct KeychainService {
     KeychainWrapper.standard.set(value, forKey: KEY_REFRESH_TOKEN)
   }
   
+  /// Clears all 3 values from the Keychain:
+  /// `ACCESS_TOKEN`, `ACCESS_TOKEN_EXPIRY` and `REFRESH_TOKEN`
+  /// Should be used when logging out and clearing user data
   static func clearAll() {
     KeychainWrapper.standard.removeObject(forKey: KEY_ACCESS_TOKEN)
     KeychainWrapper.standard.removeObject(forKey: KEY_ACCESS_TOKEN_EXPIRY)
