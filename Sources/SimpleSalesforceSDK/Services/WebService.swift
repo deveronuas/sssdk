@@ -44,7 +44,7 @@ class WebService {
           guard let data = data else { return }
           completionHandler(data)
         }
-      } else if (400...499).contains(response.statusCode) {
+      } else if response.statusCode == 401 {
         self.refreshAccessToken(host: host, clientId: clientId, clientSecret: clientSecret, refreshToken: refreshToken)
       } else {
         if let error = error {
