@@ -120,7 +120,7 @@ public class SSSDK {
     WebService.shared.refreshAccessToken(
       host: host!,
       clientId: clientId!,
-      clientSecret: clientSecret,
+      clientSecret: clientSecret!,
       refreshToken: refreshToken
     )
   }
