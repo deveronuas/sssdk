@@ -29,9 +29,9 @@ public class SSSDK {
   private init() {}
 
   private func confirmConfiguration() throws {
-    // clientSecret is optional
     if host == nil || host == "" ||
         clientId == nil || clientId == "" ||
+        clientSecret == nil || clientSecret == "" ||
         redirectUri == nil || redirectUri == "" {
       throw ConfigurationError.runtimeError("SSSDK not configured yet")
     }
@@ -42,7 +42,7 @@ public class SSSDK {
   ///     - host: The Salesforce instance’s endpoint (or that of the experience cloud community)
   ///     - redirectUri: The URL where users are redirected after a successful authentication
   ///     - clientId: Client identifier for the OAuth 2.0 client.
-  ///     - clientSecret : Client Secret for the OAuth 2.0 client (optional).
+  ///     - clientSecret : Client Secret for the OAuth 2.0 client.
   ///
   /// The `redirectUri` should match your app's deeplink URL scheme (e.g. `com.company.yourapp://auth`)
   /// Once the login flow concludes this Uri should launch your app
@@ -53,7 +53,7 @@ public class SSSDK {
   ///   3. Scroll down until you find “URL Types”
   ///   4. Hit the + button, and add your scheme under “URL schemes”
   /// Also, be sure to add this URL to your redirect uri settings in Salesforce's connected app
-  public func configure(host: String, redirectUri: String, clientId: String, clientSecret: String?) {
+  public func configure(host: String, redirectUri: String, clientId: String, clientSecret: String) {
     self.host = host
     self.redirectUri = redirectUri
     self.clientId = clientId
@@ -95,7 +95,7 @@ public class SSSDK {
         let temp = queryItems.reduce(into: [String: String]()) { (result, item) in
           result[item.name] = item.value
         }
-        let accessToken = (temp["access_token"] ?? "")  as String
+        let accessToken = (temp["access_token"] ?? "") as String
         let refreshToken = ((temp["refresh_token"] ?? "") as String)
 
         KeychainService.setAccessToken(accessToken)
@@ -139,7 +139,7 @@ public class SSSDK {
     WebService.shared.fetchData(
       host: host!,
       clientId: clientId!,
-      clientSecret: clientSecret,
+      clientSecret: clientSecret!,
       refreshToken: refreshToken,
       accessToken: accessToken,
       query: query

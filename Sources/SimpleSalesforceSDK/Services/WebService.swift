@@ -13,12 +13,12 @@ class WebService {
   /// - Parameters:
   ///     - host: The Salesforce instance’s endpoint.
   ///     - clientId: Client Id for the OAuth 2.0 client.
-  ///     - clientSecret: Client Secret for the OAuth 2.0 client (optional).
+  ///     - clientSecret: Client Secret for the OAuth 2.0 client.
   ///     - refreshToken: The refresh token issued to the client.
   ///     - accessToken: The access token issued by salesforce.
   ///     - query: SOQL query to fetch the data.
   ///     - completionHandler: Completion handler called when data fetch succeeds `data` is the optional Data from the salesforce.
-  func fetchData(host: String, clientId: String, clientSecret: String?, refreshToken: String, accessToken: String, query: String, completionHandler: @escaping ((Data?) -> Void)) {
+  func fetchData(host: String, clientId: String, clientSecret: String, refreshToken: String, accessToken: String, query: String, completionHandler: @escaping ((Data?) -> Void)) {
     let bearerAccessToken = "Bearer \(accessToken)"
     let url = "\(host)/data/v54.0/query/?q="
     let fetchQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
@@ -59,22 +59,19 @@ class WebService {
   /// - Parameters:
   ///     - host: The Salesforce instance’s endpoint.
   ///     - clientId: Client identifier for the OAuth 2.0 client.
-  ///     - clientSecret : Client Secret for the OAuth 2.0 client (optional)
+  ///     - clientSecret : Client Secret for the OAuth 2.0 client.
   ///     - accessToken : The access token issued by the authorization server.
   ///
   /// This method fetches the meta information, from salesforce, surrounding the access token.
   /// Including whether this token is currently active, expiry, originally issued, this token is not
   /// to be used before.
-  func interospectAccessToken(host: String, clientId: String, clientSecret: String?, accessToken: String) {
+  func interospectAccessToken(host: String, clientId: String, clientSecret: String, accessToken: String) {
     guard let url = URL(string: "\(host)/oauth2/introspect") else { return }
 
     var params = "token=\(accessToken)" +
       "&client_id=\(clientId)" +
+      "&client_secret=\(clientSecret)" +
       "&token_type_hint=access_token"
-    
-    if let clientSecret = clientSecret {
-      params += "&client_secret=\(clientSecret)"
-    }
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -108,11 +105,11 @@ class WebService {
   /// - Parameters:
   ///     - host: The Salesforce instance’s endpoint.
   ///     - clientId: Client identifier for the OAuth 2.0 client.
-  ///     - clientSecret : Client Secret for the OAuth 2.0 client (optional).
+  ///     - clientSecret : Client Secret for the OAuth 2.0 client.
   ///     - accessToken : The access token issued by the authorization server.
   ///
   /// This will also call `interospectAccessToken` to reset the expiry
-  func refreshAccessToken(host: String, clientId: String, clientSecret: String?, refreshToken: String) {
+  func refreshAccessToken(host: String, clientId: String, clientSecret: String, refreshToken: String) {
     let params: String  = "grant_type=refresh_token" +
       "&client_id=\(clientId)" +
       "&refresh_token=\(refreshToken)"
