@@ -68,7 +68,7 @@ class WebService {
   func interospectAccessToken(host: String, clientId: String, clientSecret: String, accessToken: String) {
     guard let url = URL(string: "\(host)/oauth2/introspect") else { return }
 
-    var params = "token=\(accessToken)" +
+    let params = "token=\(accessToken)" +
       "&client_id=\(clientId)" +
       "&client_secret=\(clientSecret)" +
       "&token_type_hint=access_token"
