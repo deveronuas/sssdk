@@ -15,6 +15,7 @@ This is a simplified SDK that can be used as a replacement for Salesforce's conn
 - [Installation](#Installation)
   - [Swift Package Manager](#Swift-Package-Manager)
   - [Xcode](#xcode)
+- [Release History](#Release-History)
 
 
 ## Goals
@@ -145,7 +146,7 @@ var body: some View {
 Add the following line to the `dependencies` in your [`Package.swift`](https://developer.apple.com/documentation/swift_packages/package) file:
 
 ```swift
-.package(url: "https://github.com/deveronuas/sssdk.git", .upToNextMajor(from: "2.4.0"))
+.package(url: "https://github.com/deveronuas/sssdk.git", .upToNextMajor(from: "1.0.0"))
 ```
 
 Next, add `sssdk` as a dependency for your targets:
@@ -164,7 +165,7 @@ import PackageDescription
 let package = Package(
     name: "MyPackage",
     dependencies: [
-        .package(url: https://github.com/deveronuas/sssdk.git, .upToNextMajor(from: "2.4.0"))
+        .package(url: https://github.com/deveronuas/sssdk.git, .upToNextMajor(from: "1.0.0"))
     ],
     targets: [
         .target(name: "MyTarget", dependencies: ["sssdk"])
@@ -180,3 +181,9 @@ https://github.com/deveronuas/sssdk.git
 ```
 
 For more details, see [Adding Package Dependencies to Your App](https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app).
+
+## Release History
+- 1.0.0
+  * Initial release
+  * Implemented OAuth2 Login flow.
+  * Implemented fetch data from salesforce using SOQL Query.
