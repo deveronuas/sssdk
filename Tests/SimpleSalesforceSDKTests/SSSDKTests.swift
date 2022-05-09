@@ -8,7 +8,7 @@ class SSSDKTests: XCTestCase {
     let customRunTimeError = ConfigurationError
       .runtimeError("SSSDK not configured yet")
       .localizedDescription
-    SSSDK.shared.configure(host:"https://www.google.com/?client=safari",
+    SSSDK.shared.configure(host: "https://www.google.com/?client=safari",
                            redirectUri: "appUrl://test",
                            clientId: "testclientid",
                            clientSecret: "testclientsecret")
@@ -21,7 +21,7 @@ class SSSDKTests: XCTestCase {
 
   /// When Access Token is not provided
   func testShouldThrowRunTimeError () throws {
-    SSSDK.shared.configure(host:"https://www.google.com/?client=safari",
+    SSSDK.shared.configure(host: "https://www.google.com/?client=safari",
                            redirectUri: "appUrl://test",
                            clientId: "testclientid",
                            clientSecret: "testclientsecret")
@@ -31,7 +31,7 @@ class SSSDKTests: XCTestCase {
       .localizedDescription
 
     XCTAssertThrowsError(
-      try SSSDK.shared.fetchData(by: "",completionHandler: { data in
+      try SSSDK.shared.fetchData(by: "", completionHandler: { data in
       })) { error in
         XCTAssertEqual(error.localizedDescription,customRunTimeError)
       }

@@ -13,10 +13,12 @@ class SSSDKNotConfiguredTests: XCTestCase {
       XCTAssertEqual(error.localizedDescription, customRunTimeError)
       return
     }
+
     XCTAssertThrowsError(try SSSDK.shared.loginView()) { error in
       XCTAssertEqual(error.localizedDescription, customRunTimeError)
       return
     }
+    
     XCTAssertThrowsError(try SSSDK.shared.fetchData(by: "", completionHandler: { data in
     })) { error in
       XCTAssertEqual(error.localizedDescription, customRunTimeError)

@@ -2,31 +2,33 @@ import Foundation
 
 public struct MockData {
   public let introspectApiResponseData =
-  """
- {
-\"active\":true,
-\"scope\":\"api web refresh_token\",
-\"client_id\":\"3XATVHBJBJBSBJNJH!nbjd\",
-\"username\":\"demo.c@deveronuas.com\",
-\"sub\":\"https://login.salesforce.com/id/00123456789U\",
-\"token_type\":\"access_token\",
-\"exp\":1651259020,
-\"iat\":1651172620,
-\"nbf\":1651172620
-}
+"""
+   {
+    \"active\":true,
+    \"scope\":\"api web refresh_token\",
+    \"client_id\":\"3XATVHBJBJBSBJNJH!nbjd\",
+    \"username\":\"demo.c@deveronuas.com\",
+    \"sub\":\"https://login.salesforce.com/id/00123456789U\",
+    \"token_type\":\"access_token\",
+    \"exp\":1651259020,
+    \"iat\":1651172620,
+    \"nbf\":1651172620
+   }
 """
 
   public let refreshTokenResponseData =
 """
-{\"access_token\":\"NEWACCESSTOKEN\",
-\"sfdc_community_url\":\"https://sales.force.com\",
-\"sfdc_community_id\":\"0WUNNJND\",
-\"signature\":\"9c/dKHiI8RX1dknn7/YHSBH0o=\",
-\"scope\":\"refresh_token web api\",
-\"instance_url\":\"https://host.my.salesforce.com\",
-\"id\":\"https://login.salesforce.com/id/00DSYHh\",
-\"token_type\":\"Bearer\",
-\"issued_at\":\"1651173169359\"}
+   {
+    \"access_token\":\"NEWACCESSTOKEN\",
+    \"sfdc_community_url\":\"https://sales.force.com\",
+    \"sfdc_community_id\":\"0WUNNJND\",
+    \"signature\":\"9c/dKHiI8RX1dknn7/YHSBH0o=\",
+    \"scope\":\"refresh_token web api\",
+    \"instance_url\":\"https://host.my.salesforce.com\",
+    \"id\":\"https://login.salesforce.com/id/00DSYHh\",
+    \"token_type\":\"Bearer\",
+    \"issued_at\":\"1651173169359\"
+   }
 """
 
   public let mockReceivedUrl = "https://www.customercontactinfo.com/user_callback.jsp#" +
