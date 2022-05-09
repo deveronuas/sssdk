@@ -15,7 +15,7 @@ This is a simplified SDK that can be used as a replacement for Salesforce's conn
 - [Installation](#Installation)
   - [Swift Package Manager](#Swift-Package-Manager)
   - [Xcode](#xcode)
-- [Release History](#Release-History)
+- [Release Process](https://github.com/deveronuas/sssdk/releases)
 
 
 ## Goals
@@ -181,9 +181,3 @@ https://github.com/deveronuas/sssdk.git
 ```
 
 For more details, see [Adding Package Dependencies to Your App](https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app).
-
-## Release History
-- 1.0.0
-  * Initial release
-  * Implemented OAuth2 Login flow.
-  * Implemented fetch data from salesforce using SOQL Query.
