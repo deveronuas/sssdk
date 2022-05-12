@@ -166,8 +166,7 @@ class WebService {
                     accessToken: String,
                     id: String,
                     objectName: String,
-                    fieldUpdates: [String: Any],
-                    completionHandler: @escaping ((Data?) -> Void)) {
+                    fieldUpdates: [String: Any]) {
 
     let jsonData = try? JSONSerialization.data(
       withJSONObject: fieldUpdates, options: .prettyPrinted)
@@ -183,9 +182,7 @@ class WebService {
 
     let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
       guard let response = response as? HTTPURLResponse else {return}
-      if (200...299).contains(response.statusCode) {
-        completionHandler(data)
-      } else if response.statusCode == 401 {
+       if response.statusCode == 401 {
         self.refreshAccessToken(host: host, clientId: clientId, clientSecret: clientSecret, refreshToken: refreshToken)
       } else {
         if let error = error {
