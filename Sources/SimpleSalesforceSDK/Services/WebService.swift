@@ -9,52 +9,6 @@ class WebService {
   
   private init() {}
 
-  /// Requests the data using SOQL Query from the salesforce
-  /// - Parameters:
-  ///     - host: The Salesforce instance’s endpoint.
-  ///     - clientId: Client Id for the OAuth 2.0 client.
-  ///     - clientSecret: Client Secret for the OAuth 2.0 client.
-  ///     - refreshToken: The refresh token issued to the client.
-  ///     - accessToken: The access token issued by salesforce.
-  ///     - query: SOQL query to fetch the data.
-  ///     - completionHandler: Completion handler called when data fetch succeeds `data` is the optional Data from the salesforce.
-  func fetchData(host: String, clientId: String, clientSecret: String, refreshToken: String, accessToken: String, query: String, completionHandler: @escaping ((Data?) -> Void)) {
-    let bearerAccessToken = "Bearer \(accessToken)"
-    let url = "\(host)/data/v54.0/query/?q="
-    let fetchQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-
-    guard let fetchUrl = URL(string: "\(url)\(fetchQuery)") else {return}
-
-    var request = URLRequest(url: fetchUrl)
-    request.httpMethod = "GET"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.setValue(bearerAccessToken,forHTTPHeaderField: "Authorization")
-    
-    guard let expiry = KeychainService.accessTokenExpiryDate, expiry > Date.now else {
-      completionHandler(nil)
-      return
-    }
-    
-    let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
-      guard let response = response as? HTTPURLResponse else {return}
-      if (200...299).contains(response.statusCode) {
-        if let error = error {
-          print(error.localizedDescription)
-        } else {
-          guard let data = data else { return }
-          completionHandler(data)
-        }
-      } else if response.statusCode == 401 {
-        self.refreshAccessToken(host: host, clientId: clientId, clientSecret: clientSecret, refreshToken: refreshToken)
-      } else {
-        if let error = error {
-          print(error.localizedDescription)
-        }
-      }
-    })
-    task.resume()
-  }
-
   ///  To check the current state of an OAuth 2.0 access token and store expiry it to Keychain
   /// - Parameters:
   ///     - host: The Salesforce instance’s endpoint.
@@ -144,6 +98,59 @@ class WebService {
     })
     task.resume()
   }
+
+  /// Requests the data using SOQL Query from the salesforce
+  /// - Parameters:
+  ///     - host: The Salesforce instance’s endpoint.
+  ///     - clientId: Client Id for the OAuth 2.0 client.
+  ///     - clientSecret: Client Secret for the OAuth 2.0 client.
+  ///     - refreshToken: The refresh token issued to the client.
+  ///     - accessToken: The access token issued by salesforce.
+  ///     - query: SOQL query to fetch the data.
+  ///     - completionHandler: Completion handler called when data fetch succeeds `data` is the optional Data from the salesforce.
+  func fetchData(host: String,
+                 clientId: String,
+                 clientSecret: String,
+                 refreshToken: String,
+                 accessToken: String,
+                 query: String,
+                 completionHandler: @escaping ((Data?) -> Void)) {
+    let bearerAccessToken = "Bearer \(accessToken)"
+    let url = "\(host)/data/v54.0/query/?q="
+    let fetchQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+
+    guard let fetchUrl = URL(string: "\(url)\(fetchQuery)") else {return}
+
+    var request = URLRequest(url: fetchUrl)
+    request.httpMethod = "GET"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.setValue(bearerAccessToken,forHTTPHeaderField: "Authorization")
+
+    guard let expiry = KeychainService.accessTokenExpiryDate, expiry > Date.now else {
+      completionHandler(nil)
+      return
+    }
+
+    let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
+      guard let response = response as? HTTPURLResponse else {return}
+      if (200...299).contains(response.statusCode) {
+        if let error = error {
+          print(error.localizedDescription)
+        } else {
+          guard let data = data else { return }
+          completionHandler(data)
+        }
+      } else if response.statusCode == 401 {
+        self.refreshAccessToken(host: host, clientId: clientId, clientSecret: clientSecret, refreshToken: refreshToken)
+      } else {
+        if let error = error {
+          print(error.localizedDescription)
+        }
+      }
+    })
+    task.resume()
+  }
+
   /// Updates the data using sObject Rows resource.
   /// - Parameters:
   ///     - host: The Salesforce instance’s endpoint.
@@ -153,13 +160,13 @@ class WebService {
   ///     - fieldUpdates: Update record data.
   ///     - completionHandler: Completion handler called when data fetch succeeds `data` is the optional Data from the salesforce.
   func updateRecord(host: String,
+                    clientId: String,
+                    clientSecret: String,
+                    refreshToken: String,
                     accessToken: String,
                     id: String,
                     objectName: String,
                     fieldUpdates: [String: Any],
-                    clientId: String,
-                    clientSecret: String,
-                    refreshToken: String,
                     completionHandler: @escaping ((Data?) -> Void)) {
 
     let jsonData = try? JSONSerialization.data(

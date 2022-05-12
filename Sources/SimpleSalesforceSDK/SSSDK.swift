@@ -117,37 +117,41 @@ public class SSSDK {
     
     guard let refreshToken = KeychainService.refreshToken else { return }
 
-    WebService.shared.refreshAccessToken(
-      host: host!,
-      clientId: clientId!,
-      clientSecret: clientSecret!,
-      refreshToken: refreshToken
-    )
+    WebService.shared.refreshAccessToken(host: host!,
+                                         clientId: clientId!,
+                                         clientSecret: clientSecret!,
+                                         refreshToken: refreshToken)
   }
 
-  public func fetchData(by query: String, completionHandler: @escaping ((Data?) -> Void)) throws {
+  /// Fetches data using SOQL query
+  /// - Returns: data for requested SOQL query.
+  /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
+  public func fetchData(by query: String,
+                        completionHandler: @escaping ((Data?) -> Void))
+  throws {
     try! confirmConfiguration()
     
     guard let accessToken = KeychainService.accessToken else {
       throw ConfigurationError.runtimeError("Access Token missing")
     }
-    
     guard let refreshToken = KeychainService.refreshToken else {
       throw ConfigurationError.runtimeError("Refresh Token missing")
     }
     
-    WebService.shared.fetchData(
-      host: host!,
-      clientId: clientId!,
-      clientSecret: clientSecret!,
-      refreshToken: refreshToken,
-      accessToken: accessToken,
-      query: query
-    ) { data in
+    WebService.shared.fetchData(host: host!,
+                                clientId: clientId!,
+                                clientSecret: clientSecret!,
+                                refreshToken: refreshToken,
+                                accessToken: accessToken,
+                                query: query)
+    { data in
       completionHandler(data)
     }
   }
 
+  /// Updates salesforce record using sObject
+  /// - Returns: empty data string (no content) on successful update.
+  /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration.
   public func update(objectName: String,
                      objectId: String,
                      with fieldUpdates: [String:Any],
@@ -163,13 +167,13 @@ public class SSSDK {
     }
 
     WebService.shared.updateRecord(host: host!,
+                                   clientId: clientId!,
+                                   clientSecret: clientSecret!,
+                                   refreshToken: refreshToken,
                                    accessToken: accessToken,
                                    id: objectId,
                                    objectName: objectName,
-                                   fieldUpdates: fieldUpdates,
-                                   clientId: clientId!,
-                                   clientSecret: clientSecret!,
-                                   refreshToken: refreshToken)
+                                   fieldUpdates: fieldUpdates)
     { data in
       completionHandler(data)
     }
