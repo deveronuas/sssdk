@@ -155,8 +155,8 @@ public class SSSDK {
   ///     - objectName: Object name to update record.
   ///     - objectId: Record id to update record.
   ///     - fieldUpdates: Update record data.
-  ///     - completionHandler: Completion handler called when data fetch succeeds `data` is the optional Data from the salesforce.
-  /// - Returns: empty data string (no content) on successful update.
+  ///     - completionHandler: Completion handler called when data update succeeds `data` is the optional Data (no content) from the salesforce.
+  /// - Returns: empty data (no content) on successful update.
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration.
   public func update(objectName: String,
                      objectId: String,
