@@ -147,4 +147,25 @@ public class SSSDK {
       completionHandler(data)
     }
   }
+
+  public func updateData(by objectId: String,
+                         labReference: [String:Any],
+                         objectName: String,
+                         completionHandler: @escaping ((Data?) -> Void))
+  throws {
+    try! confirmConfiguration()
+
+    guard let accessToken = KeychainService.accessToken else {
+      throw ConfigurationError.runtimeError("Access Token missing")
+    }
+
+    WebService.shared.updateRecord(host: host!,
+                                   accessToken: accessToken,
+                                   id: objectId,
+                                   objectName: objectName,
+                                   fieldUpdates: labReference)
+    { data in
+      completionHandler(data)
+    }
+  }
 }

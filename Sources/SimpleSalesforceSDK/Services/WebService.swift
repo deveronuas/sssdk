@@ -144,4 +144,43 @@ class WebService {
     })
     task.resume()
   }
+  /// Updates the data using sObject Rows resource.
+  /// - Parameters:
+  ///     - host: The Salesforce instance’s endpoint.
+  ///     - accessToken: The access token issued by salesforce.
+  ///     - id: Record id to update record.
+  ///     - objectName: object name to update record.
+  ///     - fieldUpdates: Update record data.
+  ///     - completionHandler: Completion handler called when data fetch succeeds `data` is the optional Data from the salesforce.
+  func updateRecord(host: String,
+                    accessToken: String,
+                    id: String,
+                    objectName: String,
+                    fieldUpdates: [String: Any],
+                    completionHandler: @escaping ((Data?) -> Void)) {
+
+      let jsonData = try? JSONSerialization.data(
+        withJSONObject: fieldUpdates, options: .prettyPrinted)
+      let bearerAccessToken = "Bearer \(accessToken)"
+      let url = "\(host)/data/v54.0/sobjects/\(objectName)/\(id)"
+
+      guard let fetchUrl = URL(string: "\(url)") else {return}
+      var request = URLRequest(url: fetchUrl)
+      request.httpMethod = "PATCH"
+      request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+      request.setValue(bearerAccessToken, forHTTPHeaderField: "Authorization")
+      request.httpBody = jsonData
+
+    let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
+      guard let response = response as? HTTPURLResponse else {return}
+      if (200...299).contains(response.statusCode) {
+          completionHandler(data)
+      }  else {
+        if let error = error {
+          print(error.localizedDescription)
+        }
+      }
+    })
+    task.resume()
+    }
 }
