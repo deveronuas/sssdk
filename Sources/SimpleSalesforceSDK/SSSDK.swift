@@ -124,6 +124,9 @@ public class SSSDK {
   }
 
   /// Fetches data using SOQL query
+  /// - Parameters:
+  ///     - query: SOQL query to fetch the data.
+  ///     - completionHandler: Completion handler called when data fetch succeeds `data` is the optional Data from the salesforce.
   /// - Returns: data for requested SOQL query.
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
   public func fetchData(by query: String,
@@ -143,13 +146,16 @@ public class SSSDK {
                                 clientSecret: clientSecret!,
                                 refreshToken: refreshToken,
                                 accessToken: accessToken,
-                                query: query)
-    { data in
-      completionHandler(data)
-    }
+                                query: query,
+                                completionHandler: completionHandler)
   }
 
   /// Updates salesforce record using sObject
+  /// - Parameters:
+  ///     - objectName: Object name to update record.
+  ///     - objectId: Record id to update record.
+  ///     - fieldUpdates: Update record data.
+  ///     - completionHandler: Completion handler called when data fetch succeeds `data` is the optional Data from the salesforce.
   /// - Returns: empty data string (no content) on successful update.
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration.
   public func update(objectName: String,
@@ -173,9 +179,7 @@ public class SSSDK {
                                    accessToken: accessToken,
                                    id: objectId,
                                    objectName: objectName,
-                                   fieldUpdates: fieldUpdates)
-    { data in
-      completionHandler(data)
-    }
+                                   fieldUpdates: fieldUpdates,
+                                   completionHandler: completionHandler)
   }
 }
