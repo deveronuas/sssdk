@@ -151,7 +151,7 @@ public class SSSDK {
   public func update(objectName: String,
                      objectId: String,
                      with fieldUpdates: [String:Any],
-                    completionHandler: @escaping ((Data?) -> Void))
+                     completionHandler: @escaping ((Data?) -> Void))
   throws {
     try! confirmConfiguration()
 
