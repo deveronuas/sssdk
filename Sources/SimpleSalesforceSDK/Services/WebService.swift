@@ -69,9 +69,9 @@ class WebService {
     guard let url = URL(string: "\(host)/oauth2/introspect") else { return }
 
     let params = "token=\(accessToken)" +
-      "&client_id=\(clientId)" +
-      "&client_secret=\(clientSecret)" +
-      "&token_type_hint=access_token"
+    "&client_id=\(clientId)" +
+    "&client_secret=\(clientSecret)" +
+    "&token_type_hint=access_token"
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -111,8 +111,8 @@ class WebService {
   /// This will also call `interospectAccessToken` to reset the expiry
   func refreshAccessToken(host: String, clientId: String, clientSecret: String, refreshToken: String) {
     let params: String  = "grant_type=refresh_token" +
-      "&client_id=\(clientId)" +
-      "&refresh_token=\(refreshToken)"
+    "&client_id=\(clientId)" +
+    "&refresh_token=\(refreshToken)"
 
     guard let url = URL(string: "\(host)/oauth2/token") else { return }
 
@@ -157,30 +157,35 @@ class WebService {
                     id: String,
                     objectName: String,
                     fieldUpdates: [String: Any],
+                    clientId: String,
+                    clientSecret: String,
+                    refreshToken: String,
                     completionHandler: @escaping ((Data?) -> Void)) {
 
-      let jsonData = try? JSONSerialization.data(
-        withJSONObject: fieldUpdates, options: .prettyPrinted)
-      let bearerAccessToken = "Bearer \(accessToken)"
-      let url = "\(host)/data/v54.0/sobjects/\(objectName)/\(id)"
+    let jsonData = try? JSONSerialization.data(
+      withJSONObject: fieldUpdates, options: .prettyPrinted)
+    let bearerAccessToken = "Bearer \(accessToken)"
+    let url = "\(host)/data/v54.0/sobjects/\(objectName)/\(id)"
 
-      guard let fetchUrl = URL(string: "\(url)") else {return}
-      var request = URLRequest(url: fetchUrl)
-      request.httpMethod = "PATCH"
-      request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-      request.setValue(bearerAccessToken, forHTTPHeaderField: "Authorization")
-      request.httpBody = jsonData
+    guard let fetchUrl = URL(string: "\(url)") else {return}
+    var request = URLRequest(url: fetchUrl)
+    request.httpMethod = "PATCH"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.setValue(bearerAccessToken, forHTTPHeaderField: "Authorization")
+    request.httpBody = jsonData
 
     let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
       guard let response = response as? HTTPURLResponse else {return}
       if (200...299).contains(response.statusCode) {
-          completionHandler(data)
-      }  else {
+        completionHandler(data)
+      } else if response.statusCode == 401 {
+        self.refreshAccessToken(host: host, clientId: clientId, clientSecret: clientSecret, refreshToken: refreshToken)
+      } else {
         if let error = error {
           print(error.localizedDescription)
         }
       }
     })
     task.resume()
-    }
+  }
 }

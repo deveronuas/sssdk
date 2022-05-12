@@ -148,22 +148,28 @@ public class SSSDK {
     }
   }
 
-  public func updateData(by objectId: String,
-                         labReference: [String:Any],
-                         objectName: String,
-                         completionHandler: @escaping ((Data?) -> Void))
+  public func update(objectName: String,
+                     objectId: String,
+                     with fieldUpdates: [String:Any],
+                    completionHandler: @escaping ((Data?) -> Void))
   throws {
     try! confirmConfiguration()
 
     guard let accessToken = KeychainService.accessToken else {
       throw ConfigurationError.runtimeError("Access Token missing")
     }
+    guard let refreshToken = KeychainService.refreshToken else {
+      throw ConfigurationError.runtimeError("Refresh Token missing")
+    }
 
     WebService.shared.updateRecord(host: host!,
                                    accessToken: accessToken,
                                    id: objectId,
                                    objectName: objectName,
-                                   fieldUpdates: labReference)
+                                   fieldUpdates: fieldUpdates,
+                                   clientId: clientId!,
+                                   clientSecret: clientSecret!,
+                                   refreshToken: refreshToken)
     { data in
       completionHandler(data)
     }
