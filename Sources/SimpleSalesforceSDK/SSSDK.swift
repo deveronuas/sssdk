@@ -112,7 +112,7 @@ public class SSSDK {
   /// This method can be called at anytime to refresh the OAuth access token from the server.
   /// It will extract the new `access_token` and store it in memory for use with API calls
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
-  public func refershAccessToken() throws {
+  public func refershAccessToken(completionHandler: @escaping ((Error?) -> Void)) throws {
     try! confirmConfiguration()
     
     guard let refreshToken = KeychainService.refreshToken else { return }
@@ -120,7 +120,8 @@ public class SSSDK {
     WebService.shared.refreshAccessToken(host: host!,
                                          clientId: clientId!,
                                          clientSecret: clientSecret!,
-                                         refreshToken: refreshToken)
+                                         refreshToken: refreshToken,
+                                         completionHandler: completionHandler)
   }
 
   /// Fetches data using SOQL query
@@ -129,7 +130,7 @@ public class SSSDK {
   /// - Returns: data for requested SOQL query.
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
   public func fetchData(by query: String,
-                        completionHandler: @escaping ((Data?) -> Void))
+                        completionHandler: @escaping ((Data?, Error?) -> Void))
   throws {
     try! confirmConfiguration()
     
@@ -157,7 +158,8 @@ public class SSSDK {
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration.
   public func update(objectName: String,
                      objectId: String,
-                     with fieldUpdates: [String:Any])
+                     with fieldUpdates: [String:Any],
+                     completionHandler: @escaping ((Error?) -> Void))
   throws {
     try! confirmConfiguration()
 
@@ -175,6 +177,7 @@ public class SSSDK {
                                    accessToken: accessToken,
                                    id: objectId,
                                    objectName: objectName,
-                                   fieldUpdates: fieldUpdates)
+                                   fieldUpdates: fieldUpdates,
+                                   completionHandler: completionHandler)
   }
 }

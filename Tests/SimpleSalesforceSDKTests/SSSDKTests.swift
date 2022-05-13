@@ -16,7 +16,9 @@ class SSSDKTests: XCTestCase {
     XCTAssertNotNil(url)
     SSSDK.shared.handleAuthRedirect(urlReceived: url)
     XCTAssertNoThrow(try SSSDK.shared.loginView(), customRunTimeError)
-    XCTAssertNoThrow(try SSSDK.shared.refershAccessToken(), customRunTimeError)
+    XCTAssertNoThrow(try SSSDK.shared.refershAccessToken() { error in
+      XCTAssertNotNil(error)
+    }, customRunTimeError)
   }
 
   /// When Access Token is not provided
@@ -31,7 +33,7 @@ class SSSDKTests: XCTestCase {
       .localizedDescription
 
     XCTAssertThrowsError(
-      try SSSDK.shared.fetchData(by: "", completionHandler: { data in
+      try SSSDK.shared.fetchData(by: "", completionHandler: { data, error in
       })) { error in
         XCTAssertEqual(error.localizedDescription,customRunTimeError)
       }

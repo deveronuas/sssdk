@@ -19,7 +19,11 @@ class WebService {
   /// This method fetches the meta information, from salesforce, surrounding the access token.
   /// Including whether this token is currently active, expiry, originally issued, this token is not
   /// to be used before.
-  func interospectAccessToken(host: String, clientId: String, clientSecret: String, accessToken: String) {
+  func interospectAccessToken(host: String,
+                              clientId: String,
+                              clientSecret: String,
+                              accessToken: String,
+                              completionHandler: @escaping ((Error?) -> Void)) {
     guard let url = URL(string: "\(host)/oauth2/introspect") else { return }
 
     let params = "token=\(accessToken)" +
@@ -35,9 +39,6 @@ class WebService {
     let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
       guard let response = response as? HTTPURLResponse else {return}
 
-      if let error = error {
-        print(error.localizedDescription)
-      } else {
         if (200...299).contains(response.statusCode) {
           guard let data = data else { return }
           do {
@@ -46,11 +47,14 @@ class WebService {
             
             let expiryDate = Date(timeIntervalSince1970: TimeInterval(responseData.accessTokenExpiryDate))
             KeychainService.setAccessTokenExpiryDate(expiryDate)
+
+            completionHandler(nil)
           } catch {
-            print(error.localizedDescription)
+            completionHandler(error)
           }
+        } else {
+            completionHandler(error)
         }
-      }
     })
     task.resume()
   }
@@ -63,41 +67,46 @@ class WebService {
   ///     - accessToken : The access token issued by the authorization server.
   ///
   /// This will also call `interospectAccessToken` to reset the expiry
-  func refreshAccessToken(host: String, clientId: String, clientSecret: String, refreshToken: String) {
-    let params: String  = "grant_type=refresh_token" +
-    "&client_id=\(clientId)" +
-    "&refresh_token=\(refreshToken)"
+  func refreshAccessToken(host: String,
+                          clientId: String,
+                          clientSecret: String,
+                          refreshToken: String,
+                          completionHandler: @escaping ((Error?) -> Void)) {
+  let params: String  = "grant_type=refresh_token" +
+                        "&client_id=\(clientId)" +
+                        "&refresh_token=\(refreshToken)"
 
-    guard let url = URL(string: "\(host)/oauth2/token") else { return }
+  guard let url = URL(string: "\(host)/oauth2/token") else { return }
 
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-    request.httpBody = params.data(using: .utf8)
+  var request = URLRequest(url: url)
+  request.httpMethod = "POST"
+  request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+  request.httpBody = params.data(using: .utf8)
 
-    let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
-      guard let response = response as? HTTPURLResponse else {return}
+  let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
+    guard let response = response as? HTTPURLResponse else {return}
 
-      if (200...299).contains(response.statusCode) {
-        if let error = error {
-          print(error.localizedDescription)
-        } else {
-          guard let data = data else { return }
-          do {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .secondsSince1970
-            let responseData = try decoder.decode(RefreshTokenResponse.self, from: data)
-            
-            KeychainService.setAccessToken(responseData.accessToken)
-            self.interospectAccessToken(host: host, clientId: clientId, clientSecret: clientSecret, accessToken: responseData.accessToken)
-          } catch {
-            print(error.localizedDescription)
-          }
-        }
+    if (200...299).contains(response.statusCode) {
+      guard let data = data else { return }
+      do {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .secondsSince1970
+        let responseData = try decoder.decode(RefreshTokenResponse.self, from: data)
+
+        KeychainService.setAccessToken(responseData.accessToken)
+        self.interospectAccessToken(host: host,
+                                    clientId: clientId,
+                                    clientSecret: clientSecret, accessToken: responseData.accessToken,
+                                    completionHandler: completionHandler)
+      } catch {
+        completionHandler(error)
       }
-    })
-    task.resume()
-  }
+    } else {
+      completionHandler(error)
+    }
+  })
+  task.resume()
+}
 
   /// Requests the data using SOQL Query from the salesforce
   /// - Parameters:
@@ -114,7 +123,7 @@ class WebService {
                  refreshToken: String,
                  accessToken: String,
                  query: String,
-                 completionHandler: @escaping ((Data?) -> Void)) {
+                 completionHandler: @escaping ((Data?,Error?) -> Void)) {
     let bearerAccessToken = "Bearer \(accessToken)"
     let url = "\(host)/data/v54.0/query/?q="
     let fetchQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
@@ -127,25 +136,22 @@ class WebService {
     request.setValue(bearerAccessToken,forHTTPHeaderField: "Authorization")
 
     guard let expiry = KeychainService.accessTokenExpiryDate, expiry > Date.now else {
-      completionHandler(nil)
       return
     }
 
     let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
       guard let response = response as? HTTPURLResponse else {return}
       if (200...299).contains(response.statusCode) {
-        if let error = error {
-          print(error.localizedDescription)
-        } else {
-          guard let data = data else { return }
-          completionHandler(data)
-        }
+        completionHandler(data, nil)
       } else if response.statusCode == 401 {
-        self.refreshAccessToken(host: host, clientId: clientId, clientSecret: clientSecret, refreshToken: refreshToken)
-      } else {
-        if let error = error {
-          print(error.localizedDescription)
+        self.refreshAccessToken(host: host,
+                                clientId: clientId,
+                                clientSecret: clientSecret,
+                                refreshToken: refreshToken){ error in
+
         }
+      } else {
+        completionHandler(nil, error)
       }
     })
     task.resume()
@@ -166,30 +172,35 @@ class WebService {
                     accessToken: String,
                     id: String,
                     objectName: String,
-                    fieldUpdates: [String: Any]) {
+                    fieldUpdates: [String: Any],
+                    completionHandler: @escaping ((Error?) -> Void))
+  {
+  let jsonData = try? JSONSerialization.data(
+    withJSONObject: fieldUpdates, options: .prettyPrinted)
+  let bearerAccessToken = "Bearer \(accessToken)"
+  let url = "\(host)/data/v54.0/sobjects/\(objectName)/\(id)"
 
-    let jsonData = try? JSONSerialization.data(
-      withJSONObject: fieldUpdates, options: .prettyPrinted)
-    let bearerAccessToken = "Bearer \(accessToken)"
-    let url = "\(host)/data/v54.0/sobjects/\(objectName)/\(id)"
+  guard let fetchUrl = URL(string: "\(url)") else {return}
+  var request = URLRequest(url: fetchUrl)
+  request.httpMethod = "PATCH"
+  request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+  request.setValue(bearerAccessToken, forHTTPHeaderField: "Authorization")
+  request.httpBody = jsonData
 
-    guard let fetchUrl = URL(string: "\(url)") else {return}
-    var request = URLRequest(url: fetchUrl)
-    request.httpMethod = "PATCH"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.setValue(bearerAccessToken, forHTTPHeaderField: "Authorization")
-    request.httpBody = jsonData
-
-    let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
-      guard let response = response as? HTTPURLResponse else {return}
-       if response.statusCode == 401 {
-        self.refreshAccessToken(host: host, clientId: clientId, clientSecret: clientSecret, refreshToken: refreshToken)
-      } else {
-        if let error = error {
-          print(error.localizedDescription)
-        }
-      }
-    })
-    task.resume()
+  let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
+    guard let response = response as? HTTPURLResponse else {return}
+    if response.statusCode == 204 {
+      completionHandler(nil)
+    } else if response.statusCode == 401 {
+      self.refreshAccessToken(host: host,
+                              clientId: clientId,
+                              clientSecret: clientSecret,
+                              refreshToken: refreshToken,
+                              completionHandler: completionHandler)
+    } else {
+      completionHandler(error)
+    }
+  })
+  task.resume()
   }
 }
