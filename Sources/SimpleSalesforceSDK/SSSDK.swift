@@ -104,7 +104,7 @@ public class SSSDK {
     }
   }
 
-  /// This method returns true if user have the access token and refresh token.
+  /// - Returns: This method returns true if user have the access token and refresh token.
   public func isAuthenticated() -> Bool {
     if KeychainService.accessToken != nil &&
         KeychainService.refreshToken != nil {
