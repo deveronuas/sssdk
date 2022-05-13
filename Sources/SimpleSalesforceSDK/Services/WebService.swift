@@ -15,6 +15,8 @@ class WebService {
   ///     - clientId: Client identifier for the OAuth 2.0 client.
   ///     - clientSecret : Client Secret for the OAuth 2.0 client.
   ///     - accessToken : The access token issued by the authorization server.
+  ///     - completionHandler: The block returns no value and takes the following parameter:
+  ///         - error: An error object that contains information about a problem, or nil if the request completed successfully.
   ///
   /// This method fetches the meta information, from salesforce, surrounding the access token.
   /// Including whether this token is currently active, expiry, originally issued, this token is not
@@ -65,6 +67,8 @@ class WebService {
   ///     - clientId: Client identifier for the OAuth 2.0 client.
   ///     - clientSecret : Client Secret for the OAuth 2.0 client.
   ///     - accessToken : The access token issued by the authorization server.
+  ///     - completionHandler: The block returns no value and takes the following parameter:
+  ///         - error: An error object that contains information about a problem, or nil if the request completed successfully.
   ///
   /// This will also call `interospectAccessToken` to reset the expiry
   func refreshAccessToken(host: String,
@@ -96,7 +100,8 @@ class WebService {
         KeychainService.setAccessToken(responseData.accessToken)
         self.interospectAccessToken(host: host,
                                     clientId: clientId,
-                                    clientSecret: clientSecret, accessToken: responseData.accessToken,
+                                    clientSecret: clientSecret,
+                                    accessToken: responseData.accessToken,
                                     completionHandler: completionHandler)
       } catch {
         completionHandler(error)
@@ -116,7 +121,9 @@ class WebService {
   ///     - refreshToken: The refresh token issued to the client.
   ///     - accessToken: The access token issued by salesforce.
   ///     - query: SOQL query to fetch the data.
-  ///     - completionHandler: Completion handler called when data fetch succeeds `data` is the optional Data from the salesforce.
+  ///     - completionHandler: The block returns no value and takes the following parameter:
+  ///         - Data: when data fetch succeeds `data` is the optional Data from the salesforce.
+  ///         - Error: An error object that contains information about a problem, or nil if the request completed successfully.
   func fetchData(host: String,
                  clientId: String,
                  clientSecret: String,
@@ -164,7 +171,8 @@ class WebService {
   ///     - id: Record id to update record.
   ///     - objectName: object name to update record.
   ///     - fieldUpdates: Update record data.
-  ///     - completionHandler: Completion handler called when data fetch succeeds `data` is the optional Data from the salesforce.
+  ///     - completionHandler: The block returns no value and takes the following parameter:
+  ///         - error: An error object that contains information about a problem, or nil if the request completed successfully.
   func updateRecord(host: String,
                     clientId: String,
                     clientSecret: String,

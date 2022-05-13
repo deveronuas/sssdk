@@ -103,6 +103,15 @@ public class SSSDK {
       }
     }
   }
+
+  /// This method returns true if user have the access token and refresh token.
+  public func isAuthenticated() -> Bool {
+    if KeychainService.accessToken != nil &&
+        KeychainService.refreshToken != nil {
+      return true
+    }
+    return false
+  }
   
   /// Erases all tokens and expiry date from keychain
   public func logout() {
@@ -111,6 +120,9 @@ public class SSSDK {
   
   /// This method can be called at anytime to refresh the OAuth access token from the server.
   /// It will extract the new `access_token` and store it in memory for use with API calls
+  /// - Parameters:
+  ///     - completionHandler: The block returns no value and takes the following parameter:
+  ///         - error: An error object that contains information about a problem, or nil if the request completed successfully.
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
   public func refershAccessToken(completionHandler: @escaping ((Error?) -> Void)) throws {
     try! confirmConfiguration()
@@ -127,7 +139,9 @@ public class SSSDK {
   /// Fetches data using SOQL query
   /// - Parameters:
   ///     - query: SOQL query to fetch the data.
-  /// - Returns: data for requested SOQL query.
+  ///     - completionHandler: The block returns no value and takes the following parameter:
+  ///         - Data: when data fetch succeeds `data` is the optional Data from the salesforce.
+  ///         - Error: An error object that contains information about a problem, or nil if the request completed successfully.
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
   public func fetchData(by query: String,
                         completionHandler: @escaping ((Data?, Error?) -> Void))
@@ -155,6 +169,8 @@ public class SSSDK {
   ///     - objectName: Object name to update record.
   ///     - objectId: Record id to update record.
   ///     - fieldUpdates: Update record data.
+  ///     - completionHandler: The block returns no value and takes the following parameter:
+  ///        - error: An error object that contains information about a problem, or nil if the request completed successfully.
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration.
   public func update(objectName: String,
                      objectId: String,
