@@ -7,9 +7,9 @@ struct SFConfig {
   var clientSecret: String
 
   var isValid: Bool {
-    host == "" ||
-      clientId == "" ||
-      clientSecret == "" ||
-      redirectUri == ""
+    host != "" &&
+      clientId != "" &&
+      clientSecret != "" &&
+      redirectUri != ""
   }
 }
