@@ -3,11 +3,6 @@ import SwiftUI
 
 @available(iOS 14.0, *)
 
-/// Custom runtime error. Raised when confoguration is missing or invalid.
-public enum ConfigurationError: Error {
-  case runtimeError(String)
-}
-
 /// SSSDK is a class to help to create the OAuth 2.0 user-agent flow,
 /// users authorize a mobile app to access data using an embedded browser.
 /// This OAuth 2.0 flow can replace the Salesforce's connected mobile SDK,
@@ -21,19 +16,14 @@ public class SSSDK {
 
   // MARK: Representation Properties
 
-  private var host: String?
-  private var redirectUri: String?
-  private var clientId: String?
-  private var clientSecret: String?
+  private var config: SFConfig?
+  private var auth: SFAuth = SFAuth()
 
   private init() {}
 
   private func confirmConfiguration() throws {
-    if host == nil || host == "" ||
-        clientId == nil || clientId == "" ||
-        clientSecret == nil || clientSecret == "" ||
-        redirectUri == nil || redirectUri == "" {
-      throw ConfigurationError.runtimeError("SSSDK not configured yet")
+    if let config = config, !config.isValid {
+      throw SSSDKError.invalidConfigurationError
     }
   }
 
@@ -44,7 +34,7 @@ public class SSSDK {
   ///     - clientId: Client identifier for the OAuth 2.0 client.
   ///     - clientSecret : Client Secret for the OAuth 2.0 client.
   ///
-  /// The `redirectUri` should match your app's deeplink URL scheme (e.g. `com.company.yourapp://auth`)
+  /// The `redirectUri` should match your app's deeplink URL scheme (e.g. `com.company.yourapp://auth/success`)
   /// Once the login flow concludes this Uri should launch your app
   /// and you will receive tokens as query parameters.
   /// To setup your URL Scheme:
@@ -53,11 +43,14 @@ public class SSSDK {
   ///   3. Scroll down until you find “URL Types”
   ///   4. Hit the + button, and add your scheme under “URL schemes”
   /// Also, be sure to add this URL to your redirect uri settings in Salesforce's connected app
+  /// NOTE: If you are calling this to configure a new Host etc., make sure to Logout the pervious user (using `logout()` method)
   public func configure(host: String, redirectUri: String, clientId: String, clientSecret: String) {
-    self.host = host
-    self.redirectUri = redirectUri
-    self.clientId = clientId
-    self.clientSecret = clientSecret
+    self.config = SFConfig(
+      host: host,
+      redirectUri: redirectUri,
+      clientId: clientId,
+      clientSecret: clientSecret
+    )
   }
 
   /// Use this method to show a login flow
@@ -65,11 +58,11 @@ public class SSSDK {
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
   public func loginView() throws -> some View {
     try! confirmConfiguration()
-    
-    let url = URL(string: "\(host!)/oauth2/authorize?" +
+
+    let url = URL(string: "\(self.config!.host)/oauth2/authorize?" +
                   "response_type=token" +
-                  "&client_id=\(clientId!)" +
-                  "&redirect_uri=\(redirectUri!)" +
+                  "&client_id=\(self.config!.clientId)" +
+                  "&redirect_uri=\(self.config!.redirectUri)" +
                   "&mystate=mystate")!
 
     return LoginView(url: url)
@@ -85,39 +78,36 @@ public class SSSDK {
   /// Although, you could implement onOpenURL on any View, we recommend against it.
   /// Our recommended solution is to use the `App` to handle the URL and use the environment
   /// observables to propagate and react to that changes accordingly.
-  public func handleAuthRedirect(urlReceived: URL) {
+  public func handleAuthRedirect(urlReceived: URL, completionHandler: @escaping ((Error?) -> Void)) throws {
+    try! confirmConfiguration()
+    
     let url = urlReceived.absoluteString
     var urlComponents: URLComponents? = URLComponents(string: url)
-    
+
     if let fragment = urlComponents?.fragment {
       urlComponents?.query = fragment
       if let queryItems = urlComponents?.queryItems {
         let temp = queryItems.reduce(into: [String: String]()) { (result, item) in
           result[item.name] = item.value
         }
-        let accessToken = (temp["access_token"] ?? "") as String
-        let refreshToken = ((temp["refresh_token"] ?? "") as String)
-
-        KeychainService.setAccessToken(accessToken)
-        KeychainService.setRefreshToken(refreshToken)
+        
+        self.auth.accessToken = (temp["access_token"] ?? "") as String
+        self.auth.refreshToken = ((temp["refresh_token"] ?? "") as String)
+        self.auth.interospectAccessToken(config: self.config!, completionHandler: completionHandler)
       }
     }
   }
 
   /// - Returns: This method returns true if user have the access token and refresh token.
   public func isAuthenticated() -> Bool {
-    if KeychainService.accessToken != nil &&
-        KeychainService.refreshToken != nil {
-      return true
-    }
-    return false
+    return self.auth.isAuthenticated
   }
-  
+
   /// Erases all tokens and expiry date from keychain
   public func logout() {
-    KeychainService.clearAll()
+    self.auth.reset()
   }
-  
+
   /// This method can be called at anytime to refresh the OAuth access token from the server.
   /// It will extract the new `access_token` and store it in memory for use with API calls
   /// - Parameters:
@@ -126,14 +116,11 @@ public class SSSDK {
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
   public func refershAccessToken(completionHandler: @escaping ((Error?) -> Void)) throws {
     try! confirmConfiguration()
-    
-    guard let refreshToken = KeychainService.refreshToken else { return }
 
-    WebService.shared.refreshAccessToken(host: host!,
-                                         clientId: clientId!,
-                                         clientSecret: clientSecret!,
-                                         refreshToken: refreshToken,
-                                         completionHandler: completionHandler)
+    self.auth.refreshAccessToken(
+      config: self.config!,
+      completionHandler: completionHandler
+    )
   }
 
   /// Fetches data using SOQL query
@@ -143,25 +130,16 @@ public class SSSDK {
   ///         - Data: when data fetch succeeds `data` is the optional Data from the salesforce.
   ///         - Error: An error object that contains information about a problem, or nil if the request completed successfully.
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
-  public func fetchData(by query: String,
-                        completionHandler: @escaping ((Data?, Error?) -> Void))
+  public func fetchData(by query: String, completionHandler: @escaping ((Data?, Error?) -> Void))
   throws {
     try! confirmConfiguration()
-    
-    guard let accessToken = KeychainService.accessToken else {
-      throw ConfigurationError.runtimeError("Access Token missing")
-    }
-    guard let refreshToken = KeychainService.refreshToken else {
-      throw ConfigurationError.runtimeError("Refresh Token missing")
-    }
-    
-    WebService.shared.fetchData(host: host!,
-                                clientId: clientId!,
-                                clientSecret: clientSecret!,
-                                refreshToken: refreshToken,
-                                accessToken: accessToken,
-                                query: query,
-                                completionHandler: completionHandler)
+
+    WebService.fetchData(
+      config: self.config!,
+      auth: self.auth,
+      query: query,
+      completionHandler: completionHandler
+    )
   }
 
   /// Updates salesforce record using sObject
@@ -172,28 +150,21 @@ public class SSSDK {
   ///     - completionHandler: The block returns no value and takes the following parameter:
   ///        - error: An error object that contains information about a problem, or nil if the request completed successfully.
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration.
-  public func update(objectName: String,
-                     objectId: String,
-                     with fieldUpdates: [String:Any],
-                     completionHandler: @escaping ((Error?) -> Void))
-  throws {
+  public func update(
+    objectName: String,
+    objectId: String,
+    with fieldUpdates: [String:Any],
+    completionHandler: @escaping ((Error?) -> Void)
+  ) throws {
     try! confirmConfiguration()
 
-    guard let accessToken = KeychainService.accessToken else {
-      throw ConfigurationError.runtimeError("Access Token missing")
-    }
-    guard let refreshToken = KeychainService.refreshToken else {
-      throw ConfigurationError.runtimeError("Refresh Token missing")
-    }
-
-    WebService.shared.updateRecord(host: host!,
-                                   clientId: clientId!,
-                                   clientSecret: clientSecret!,
-                                   refreshToken: refreshToken,
-                                   accessToken: accessToken,
-                                   id: objectId,
-                                   objectName: objectName,
-                                   fieldUpdates: fieldUpdates,
-                                   completionHandler: completionHandler)
+    WebService.updateRecord(
+      config: self.config!,
+      auth: self.auth,
+      id: objectId,
+      objectName: objectName,
+      fieldUpdates: fieldUpdates,
+      completionHandler: completionHandler
+    )
   }
 }

@@ -16,5 +16,3 @@ public struct LoginView_Previews: PreviewProvider {
     LoginView(url: URL(string: "https://www.google.com")!)
   }
 }
-
-

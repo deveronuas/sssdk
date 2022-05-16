@@ -4,9 +4,7 @@ import XCTest
 // When SSSDK is not configured
 class SSSDKNotConfiguredTests: XCTestCase {
 
-  let customRunTimeError = ConfigurationError
-    .runtimeError("SSSDK not configured yet")
-    .localizedDescription
+  let customRunTimeError = SSSDKError.invalidConfigurationError.localizedDescription
   
   func testShouldThrowRuntimeError () throws {
     XCTAssertThrowsError(try SSSDK.shared.refershAccessToken(){ error in
