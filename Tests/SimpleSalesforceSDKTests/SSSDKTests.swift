@@ -13,7 +13,7 @@ class SSSDKTests: XCTestCase {
                            clientSecret: "testclientsecret")
     let url = try XCTUnwrap(URL(string: MockData().mockReceivedUrl))
     XCTAssertNotNil(url)
-    SSSDK.shared.handleAuthRedirect(urlReceived: url)
+    try! SSSDK.shared.handleAuthRedirect(urlReceived: url) { _ in }
     XCTAssertNoThrow(try SSSDK.shared.loginView(), customRunTimeError)
     XCTAssertNoThrow(try SSSDK.shared.refershAccessToken() { error in
       XCTAssertNotNil(error)
@@ -39,6 +39,6 @@ class SSSDKTests: XCTestCase {
   func testHandleRedirect () throws {
     let url = try XCTUnwrap(URL(string: MockData().mockReceivedUrl))
     XCTAssertNotNil(url)
-    SSSDK.shared.handleAuthRedirect(urlReceived: url)
+    try! SSSDK.shared.handleAuthRedirect(urlReceived: url) { _ in }
   }
 }

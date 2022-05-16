@@ -43,10 +43,8 @@ public class SSSDK {
   ///   3. Scroll down until you find “URL Types”
   ///   4. Hit the + button, and add your scheme under “URL schemes”
   /// Also, be sure to add this URL to your redirect uri settings in Salesforce's connected app
-  /// NOTE: Calling this method will log the pervious user out.
+  /// NOTE: If you are calling this to configure a new Host etc., make sure to Logout the pervious user (using `logout()` method)
   public func configure(host: String, redirectUri: String, clientId: String, clientSecret: String) {
-    self.auth.reset()
-
     self.config = SFConfig(
       host: host,
       redirectUri: redirectUri,
@@ -80,7 +78,9 @@ public class SSSDK {
   /// Although, you could implement onOpenURL on any View, we recommend against it.
   /// Our recommended solution is to use the `App` to handle the URL and use the environment
   /// observables to propagate and react to that changes accordingly.
-  public func handleAuthRedirect(urlReceived: URL) {
+  public func handleAuthRedirect(urlReceived: URL, completionHandler: @escaping ((Error?) -> Void)) throws {
+    try! confirmConfiguration()
+    
     let url = urlReceived.absoluteString
     var urlComponents: URLComponents? = URLComponents(string: url)
 
@@ -93,6 +93,7 @@ public class SSSDK {
         
         self.auth.accessToken = (temp["access_token"] ?? "") as String
         self.auth.refreshToken = ((temp["refresh_token"] ?? "") as String)
+        self.auth.interospectAccessToken(config: self.config!, completionHandler: completionHandler)
       }
     }
   }

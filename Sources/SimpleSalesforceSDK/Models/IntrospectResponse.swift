@@ -1,6 +1,6 @@
 import Foundation
 
-struct IntrospectResponse : Decodable {
+struct IntrospectResponse: Decodable {
   let active: Bool
   let scope: String
   let clientId: String

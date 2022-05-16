@@ -1,6 +1,6 @@
 import Foundation
 
-struct RefreshTokenResponse : Decodable {
+struct RefreshTokenResponse: Decodable {
   let accessToken: String
   let sfdcCommunityUrl: String
   let sfdcCommunityId: String

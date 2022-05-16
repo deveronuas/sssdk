@@ -6,6 +6,7 @@ public enum SSSDKError: Error {
   case authNoAccessTokenError
   case authNoRefreshTokenError
   case authRefreshFailedError
+  case authIntrospectFailedError
   case unknown(desc: String)
 }
 
@@ -20,6 +21,8 @@ extension SSSDKError: CustomStringConvertible {
         return "Missing refresh token, try login again."
       case .authRefreshFailedError:
         return "Refreshing access token failed, try login again."
+      case .authIntrospectFailedError:
+        return "Introspecting access token failed, try login again."
       case .unknown(let desc):
         return desc
     }
@@ -37,6 +40,8 @@ extension SSSDKError: LocalizedError {
         return NSLocalizedString(self.description, comment: "Refresh Token Not Found")
       case .authRefreshFailedError:
         return NSLocalizedString(self.description, comment: "Refresh Failure")
+      case .authIntrospectFailedError:
+        return NSLocalizedString(self.description, comment: "Introspect Failure")
       case .unknown(let desc):
         return NSLocalizedString(desc, comment: "Unexpected Error")
     }
