@@ -59,11 +59,13 @@ public class SSSDK {
   public func loginView() throws -> some View {
     try! confirmConfiguration()
 
-    let url = URL(string: "\(self.config!.host)/oauth2/authorize?" +
+    guard let url = URL(string: "\(self.config!.host)services/oauth2/authorize?" +
                   "response_type=token" +
                   "&client_id=\(self.config!.clientId)" +
-                  "&redirect_uri=\(self.config!.redirectUri)" +
-                  "&mystate=mystate")!
+                  "&redirect_uri=\(self.config!.redirectUri)")
+    else {
+      throw (SSSDKError.invalidUrlError)
+    }
 
     return LoginView(url: url)
   }

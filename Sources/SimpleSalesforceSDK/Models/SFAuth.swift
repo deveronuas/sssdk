@@ -91,7 +91,11 @@ class SFAuth {
     "&client_id=\(config.clientId)" +
     "&refresh_token=\(refreshToken)"
     
-    guard let url = URL(string: "\(config.host)/oauth2/token") else { return }
+    guard let url = URL(string: "\(config.host)services/oauth2/token")
+    else {
+      completionHandler(SSSDKError.invalidUrlError)
+      return
+    }
     
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -130,8 +134,12 @@ class SFAuth {
   /// This method fetches the meta information, from salesforce, surrounding the access token.
   /// Including whether this token is currently active, expiry, originally issued
   func interospectAccessToken(config: SFConfig, completionHandler: @escaping ((Error?) -> Void)) {
-    let url = URL(string: "\(config.host)/oauth2/introspect")!
-    
+   guard let url = URL(string: "\(config.host)services/oauth2/introspect")
+    else {
+      completionHandler(SSSDKError.invalidUrlError)
+      return
+    }
+
     let params = "token=\(self.accessToken!)" +
     "&client_id=\(config.clientId)" +
     "&client_secret=\(config.clientSecret)" +

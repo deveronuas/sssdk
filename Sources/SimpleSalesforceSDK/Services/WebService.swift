@@ -26,10 +26,14 @@ class WebService {
         return
       }
       
-      let url = "\(config.host)/data/v54.0/query/?q="
+      let url = "\(config.host)services/data/v54.0/query/?q="
       let fetchQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
       
-      guard let fetchUrl = URL(string: "\(url)\(fetchQuery)") else {return}
+      guard let fetchUrl = URL(string: "\(url)\(fetchQuery)")
+      else {
+        completionHandler(nil, SSSDKError.invalidUrlError)
+        return
+      }
       
       var request = URLRequest(url: fetchUrl)
       request.httpMethod = "GET"
@@ -96,8 +100,12 @@ class WebService {
       let jsonData = try? JSONSerialization.data(
         withJSONObject: fieldUpdates, options: .prettyPrinted)
 
-      let url = "\(config.host)/data/v54.0/sobjects/\(objectName)/\(id)"
-      let fetchUrl = URL(string: "\(url)")!
+      let url = "\(config.host)services/data/v54.0/sobjects/\(objectName)/\(id)"
+     guard let fetchUrl = URL(string: "\(url)")
+      else {
+       completionHandler(SSSDKError.invalidUrlError)
+       return
+     }
 
       var request = URLRequest(url: fetchUrl)
       request.httpMethod = "PATCH"
