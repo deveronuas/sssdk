@@ -25,21 +25,16 @@ class WebService {
         completionHandler(nil, error)
         return
       }
-      
-      let url = "\(config.host)services/data/v54.0/query/?q="
-      let fetchQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-      
-      guard let fetchUrl = URL(string: "\(url)\(fetchQuery)")
-      else {
-        completionHandler(nil, SSSDKError.invalidUrlError)
-        return
-      }
-      
-      var request = URLRequest(url: fetchUrl)
-      request.httpMethod = "GET"
-      request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-      request.setValue(bearerToken,forHTTPHeaderField: "Authorization")
-      
+
+      let fetchUrl = try! URLBuilder.fetchDataURL(config: config,
+                                                  query: query)
+      let request = URLRequestBuilder.request(
+        requestConfig:
+          URLRequestConfig(url: fetchUrl,
+                           httpMethod: "GET",
+                           bearerToken: bearerToken,
+                           contentType: "application/x-www-form-urlencoded"))
+
       guard let expiry = KeychainService.accessTokenExpiryDate, expiry > Date.now else {
         return
       }
@@ -100,18 +95,17 @@ class WebService {
       let jsonData = try? JSONSerialization.data(
         withJSONObject: fieldUpdates, options: .prettyPrinted)
 
-      let url = "\(config.host)services/data/v54.0/sobjects/\(objectName)/\(id)"
-      guard let fetchUrl = URL(string: "\(url)")
-      else {
-        completionHandler(SSSDKError.invalidUrlError)
-        return
-      }
+      let fetchUrl = try! URLBuilder.updateDataURL(config: config,
+                                                   objectName: objectName,
+                                                   id: id)
+      let request = URLRequestBuilder.request(
+        requestConfig:
+          URLRequestConfig(url: fetchUrl,
+                           params: jsonData,
+                           httpMethod: "PATCH",
+                           bearerToken: bearerToken,
+                           contentType: "application/json"))
 
-      var request = URLRequest(url: fetchUrl)
-      request.httpMethod = "PATCH"
-      request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-      request.setValue(bearerToken, forHTTPHeaderField: "Authorization")
-      request.httpBody = jsonData
 
       let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
         let response = response as! HTTPURLResponse

@@ -58,14 +58,8 @@ public class SSSDK {
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
   public func loginView() throws -> some View {
     try! confirmConfiguration()
-
-    guard let url = URL(string: "\(self.config!.host)services/oauth2/authorize?" +
-                  "response_type=token" +
-                  "&client_id=\(self.config!.clientId)" +
-                  "&redirect_uri=\(self.config!.redirectUri)")
-    else {
-      throw (SSSDKError.invalidUrlError)
-    }
+    
+    let url = try! URLBuilder.redirectURL(config: config!)
 
     return LoginView(url: url)
   }
