@@ -3,9 +3,26 @@ import Foundation
 public struct URLRequestConfig {
   var url: URL
   var params: Data?
-  var httpMethod: String
   var bearerToken: String?
-  var contentType: String
+  var httpMethod = HTTPMethod.get
+  var contentType = CONTENTTYPE.urlEncoded
+
+  enum HTTPMethod: String {
+    case get = "GET"
+    case head = "HEAD"
+    case post = "POST"
+    case put = "PUT"
+    case delete = "DELETE"
+    case connect = "CONNECT"
+    case options = "OPTIONS"
+    case trace = "TRACE"
+    case patch = "PATCH"
+  }
+  
+  enum CONTENTTYPE: String {
+    case json = "application/json"
+    case urlEncoded = "application/x-www-form-urlencoded"
+  }
 }
 
 public struct URLRequestBuilder {
@@ -13,21 +30,19 @@ public struct URLRequestBuilder {
   /// - Parameters:
   ///     - requestConfig: The URLRequestConfig instance’s configuration.
   /// - Returns: returns URLRequest for requested URLRequestConfiguration.
-  public static func request(requestConfig: URLRequestConfig) -> URLRequest {
+  public static func request(with config: URLRequestConfig) -> URLRequest {
 
-    var request = URLRequest(url: requestConfig.url)
-    request.httpMethod = requestConfig.httpMethod
-    request.setValue(requestConfig.contentType,
+    var request = URLRequest(url: config.url)
+    request.httpMethod = config.httpMethod.rawValue
+    request.setValue(config.contentType.rawValue,
                      forHTTPHeaderField: "Content-Type")
-
-    if let bearerToken = requestConfig.bearerToken {
+    
+    if let bearerToken = config.bearerToken {
       request.setValue(bearerToken, forHTTPHeaderField: "Authorization")
     }
-    if let params =  requestConfig.params {
-    request.httpBody = params
+    if let params =  config.params {
+      request.httpBody = params
     }
-
     return request
   }
-
 }

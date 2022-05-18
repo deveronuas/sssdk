@@ -88,17 +88,18 @@ class SFAuth {
       return
     }
     
-    let params: String  = "grant_type=refresh_token" +
+    let params: String = "grant_type=refresh_token" +
     "&client_id=\(config.clientId)" +
     "&refresh_token=\(refreshToken)" +
     "&client_secret=\(config.clientSecret)"
 
     let url = try! URLBuilder.refreshTokenURL(urlString: config.host)
     let request = URLRequestBuilder
-      .request(requestConfig:                                                    URLRequestConfig(url: url,
-                               params: params.data(using: .utf8),
-                               httpMethod: "POST",
-                               contentType: "application/x-www-form-urlencoded"))
+      .request(with:
+                URLRequestConfig(url: url,
+                                 params: params.data(using: .utf8),
+                                 httpMethod:.post,
+                                 contentType: .urlEncoded))
 
     let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
       guard let response = response as? HTTPURLResponse else {return}
@@ -141,11 +142,11 @@ class SFAuth {
     "&token_type_hint=access_token"
 
     let request = URLRequestBuilder
-      .request(requestConfig:
+      .request(with:
                 URLRequestConfig(url: url,
                                  params: params.data(using: .utf8),
-                                 httpMethod: "POST",
-                                 contentType: "application/x-www-form-urlencoded"))
+                                 httpMethod: .post,
+                                 contentType: .urlEncoded))
 
     let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
       guard let response = response as? HTTPURLResponse else {return}

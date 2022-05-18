@@ -28,12 +28,12 @@ class WebService {
 
       let fetchUrl = try! URLBuilder.fetchDataURL(config: config,
                                                   query: query)
-      let request = URLRequestBuilder.request(
-        requestConfig:
-          URLRequestConfig(url: fetchUrl,
-                           httpMethod: "GET",
-                           bearerToken: bearerToken,
-                           contentType: "application/x-www-form-urlencoded"))
+      let request = URLRequestBuilder
+        .request(with:
+                  URLRequestConfig(url: fetchUrl,
+                                   bearerToken: bearerToken,
+                                   httpMethod: .get,
+                                   contentType: .urlEncoded))
 
       guard let expiry = KeychainService.accessTokenExpiryDate, expiry > Date.now else {
         return
@@ -98,13 +98,13 @@ class WebService {
       let fetchUrl = try! URLBuilder.updateDataURL(config: config,
                                                    objectName: objectName,
                                                    id: id)
-      let request = URLRequestBuilder.request(
-        requestConfig:
-          URLRequestConfig(url: fetchUrl,
-                           params: jsonData,
-                           httpMethod: "PATCH",
-                           bearerToken: bearerToken,
-                           contentType: "application/json"))
+      let request = URLRequestBuilder
+        .request(with:
+                  URLRequestConfig(url: fetchUrl,
+                                   params: jsonData,
+                                   bearerToken: bearerToken,
+                                   httpMethod: .patch,
+                                   contentType: .json))
 
 
       let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
