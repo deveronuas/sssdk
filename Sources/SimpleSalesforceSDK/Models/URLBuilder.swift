@@ -8,7 +8,7 @@ public struct URLBuilder {
   ///     - host: The Salesforce instance’s configuration.
   /// - Returns: returns urlString 
   public static func verifyHost(host: String) -> String {
-    if host.hasSuffix("/"){
+    if !host.hasSuffix("/"){
       return host.appending("/")
     }
     return host
