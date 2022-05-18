@@ -27,7 +27,7 @@ public struct URLBuilder {
                                 "&client_id=\(config.clientId)" +
                                 "&redirect_uri=\(config.redirectUri)")
     else {
-      throw (SSSDKError.invalidUrlError)
+      throw (SSSDKError.invalidUrlError(url: host))
     }
     return redirectUrl
 
@@ -42,7 +42,7 @@ public struct URLBuilder {
     let host = verifyHost(host: urlString)
     guard let introspectUrl = URL(string: "\(host)services/oauth2/introspect")
     else {
-      throw SSSDKError.invalidUrlError
+      throw SSSDKError.invalidUrlError(url: host)
     }
     return introspectUrl
 
@@ -56,7 +56,7 @@ public struct URLBuilder {
     let host = verifyHost(host: urlString)
     guard let refreshToneUrl = URL(string: "\(host)services/oauth2/token")
     else {
-      throw SSSDKError.invalidUrlError
+      throw SSSDKError.invalidUrlError(url: host)
     }
     return refreshToneUrl
 
@@ -75,7 +75,7 @@ public struct URLBuilder {
 
     guard let fetchUrl = URL(string: "\(url)\(fetchQuery)")
     else {
-      throw SSSDKError.invalidUrlError
+      throw SSSDKError.invalidUrlError(url: host)
     }
     return fetchUrl
 
@@ -94,7 +94,7 @@ public struct URLBuilder {
     let url = "\(host)services/data/v54.0/sobjects/\(objectName)/\(id)"
     guard let updateUrl = URL(string: "\(url)")
     else {
-      throw SSSDKError.invalidUrlError
+      throw SSSDKError.invalidUrlError(url: host)
     }
     return updateUrl
   }
