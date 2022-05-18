@@ -7,6 +7,7 @@ public enum SSSDKError: Error {
   case authNoRefreshTokenError
   case authRefreshFailedError
   case authIntrospectFailedError
+  case invalidUrlError(url: String)
   case unknown(desc: String)
 }
 
@@ -23,6 +24,8 @@ extension SSSDKError: CustomStringConvertible {
         return "Refreshing access token failed, try login again."
       case .authIntrospectFailedError:
         return "Introspecting access token failed, try login again."
+      case .invalidUrlError(let url):
+        return "The provided URL (\(url)) is invalid"
       case .unknown(let desc):
         return desc
     }
@@ -42,6 +45,8 @@ extension SSSDKError: LocalizedError {
         return NSLocalizedString(self.description, comment: "Refresh Failure")
       case .authIntrospectFailedError:
         return NSLocalizedString(self.description, comment: "Introspect Failure")
+      case .invalidUrlError:
+        return NSLocalizedString(self.description, comment: "Invalid url")
       case .unknown(let desc):
         return NSLocalizedString(desc, comment: "Unexpected Error")
     }

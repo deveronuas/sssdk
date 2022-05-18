@@ -36,7 +36,7 @@ class SFAuth {
   }
   
   var isAuthenticated: Bool {
-    return accessToken != nil && refreshToken != nil 
+    return accessToken != nil && refreshToken != nil
   }
   
   var isAccessTokenValid: Bool {
@@ -82,32 +82,35 @@ class SFAuth {
   ///
   /// This will also call `interospectAccessToken` to reset the expiry
   func refreshAccessToken(config: SFConfig, completionHandler: @escaping ((Error?) -> Void)) {
+
     guard let refreshToken = self.refreshToken else {
       completionHandler(SSSDKError.authNoRefreshTokenError)
       return
     }
     
-    let params: String  = "grant_type=refresh_token" +
+    let params: String = "grant_type=refresh_token" +
     "&client_id=\(config.clientId)" +
-    "&refresh_token=\(refreshToken)"
-    
-    guard let url = URL(string: "\(config.host)/oauth2/token") else { return }
-    
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-    request.httpBody = params.data(using: .utf8)
-    
+    "&refresh_token=\(refreshToken)" +
+    "&client_secret=\(config.clientSecret)"
+
+    let url = try! URLBuilder.refreshTokenURL(urlString: config.host)
+    let request = URLRequestBuilder
+      .request(with:
+                RequestConfig(url: url,
+                                 params: params.data(using: .utf8),
+                                 httpMethod:.post,
+                                 contentType: .urlEncoded))
+
     let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
       guard let response = response as? HTTPURLResponse else {return}
-      
+
       if (200...299).contains(response.statusCode) {
         guard let data = data else { return }
         do {
           let decoder = JSONDecoder()
           decoder.dateDecodingStrategy = .secondsSince1970
           let responseData = try decoder.decode(RefreshTokenResponse.self, from: data)
-          
+
           self.accessToken = responseData.accessToken
           self.interospectAccessToken(config: config, completionHandler: completionHandler)
         } catch {
@@ -117,7 +120,7 @@ class SFAuth {
         completionHandler(error)
       }
     })
-    
+
     task.resume()
   }
   
@@ -130,18 +133,21 @@ class SFAuth {
   /// This method fetches the meta information, from salesforce, surrounding the access token.
   /// Including whether this token is currently active, expiry, originally issued
   func interospectAccessToken(config: SFConfig, completionHandler: @escaping ((Error?) -> Void)) {
-    let url = URL(string: "\(config.host)/oauth2/introspect")!
-    
+
+    let url = try! URLBuilder.introspectURL(urlString: config.host)
+
     let params = "token=\(self.accessToken!)" +
     "&client_id=\(config.clientId)" +
     "&client_secret=\(config.clientSecret)" +
     "&token_type_hint=access_token"
-    
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-    request.httpBody = params.data(using: .utf8)
-    
+
+    let request = URLRequestBuilder
+      .request(with:
+                RequestConfig(url: url,
+                                 params: params.data(using: .utf8),
+                                 httpMethod: .post,
+                                 contentType: .urlEncoded))
+
     let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
       guard let response = response as? HTTPURLResponse else {return}
       
@@ -150,10 +156,10 @@ class SFAuth {
         do {
           let decoder = JSONDecoder()
           let responseData = try decoder.decode(IntrospectResponse.self, from: data)
-          
+
           let expiryDate = Date(timeIntervalSince1970: TimeInterval(responseData.accessTokenExpiryDate))
           self.accessTokenExpiryDate = expiryDate
-          
+
           completionHandler(nil)
         } catch {
           completionHandler(error)
@@ -162,7 +168,7 @@ class SFAuth {
         completionHandler(error)
       }
     })
-    
+
     task.resume()
   }
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-struct SFConfig {
+public struct SFConfig {
   var host: String
   var redirectUri: String
   var clientId: String
