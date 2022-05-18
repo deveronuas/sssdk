@@ -1,11 +1,11 @@
 import Foundation
 
-public struct URLRequestConfig {
+public struct RequestConfig {
   var url: URL
   var params: Data?
   var bearerToken: String?
   var httpMethod = HTTPMethod.get
-  var contentType = CONTENTTYPE.urlEncoded
+  var contentType = RequestContentType.urlEncoded
 
   enum HTTPMethod: String {
     case get = "GET"
@@ -19,18 +19,18 @@ public struct URLRequestConfig {
     case patch = "PATCH"
   }
   
-  enum CONTENTTYPE: String {
+  enum RequestContentType: String {
     case json = "application/json"
     case urlEncoded = "application/x-www-form-urlencoded"
   }
 }
 
 public struct URLRequestBuilder {
-  ///  Creates URL for updateData api
+  ///  Builds requests based on provided config
   /// - Parameters:
-  ///     - requestConfig: The URLRequestConfig instance’s configuration.
-  /// - Returns: returns URLRequest for requested URLRequestConfiguration.
-  public static func request(with config: URLRequestConfig) -> URLRequest {
+  ///     - config: Configuration for the request.
+  /// - Returns: returns URLRequest for requested URLRequestConfig.
+  public static func request(with config: RequestConfig) -> URLRequest {
 
     var request = URLRequest(url: config.url)
     request.httpMethod = config.httpMethod.rawValue

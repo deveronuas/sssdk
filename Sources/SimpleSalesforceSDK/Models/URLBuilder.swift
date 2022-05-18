@@ -30,7 +30,6 @@ public struct URLBuilder {
       throw (SSSDKError.invalidUrlError(url: host))
     }
     return redirectUrl
-
   }
 
   ///  Creates URL for introspect  access token api
@@ -45,7 +44,6 @@ public struct URLBuilder {
       throw SSSDKError.invalidUrlError(url: host)
     }
     return introspectUrl
-
   }
   ///  Creates URL for refresh access token api
   /// - Parameters:
@@ -59,7 +57,6 @@ public struct URLBuilder {
       throw SSSDKError.invalidUrlError(url: host)
     }
     return refreshToneUrl
-
   }
   ///  Creates URL for fetchData api
   /// - Parameters:
@@ -78,7 +75,6 @@ public struct URLBuilder {
       throw SSSDKError.invalidUrlError(url: host)
     }
     return fetchUrl
-
   }
   ///  Creates URL for updateData api
   /// - Parameters:

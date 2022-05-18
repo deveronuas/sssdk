@@ -30,7 +30,7 @@ class WebService {
                                                   query: query)
       let request = URLRequestBuilder
         .request(with:
-                  URLRequestConfig(url: fetchUrl,
+                  RequestConfig(url: fetchUrl,
                                    bearerToken: bearerToken,
                                    httpMethod: .get,
                                    contentType: .urlEncoded))
@@ -100,7 +100,7 @@ class WebService {
                                                    id: id)
       let request = URLRequestBuilder
         .request(with:
-                  URLRequestConfig(url: fetchUrl,
+                  RequestConfig(url: fetchUrl,
                                    params: jsonData,
                                    bearerToken: bearerToken,
                                    httpMethod: .patch,

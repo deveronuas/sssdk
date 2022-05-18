@@ -96,7 +96,7 @@ class SFAuth {
     let url = try! URLBuilder.refreshTokenURL(urlString: config.host)
     let request = URLRequestBuilder
       .request(with:
-                URLRequestConfig(url: url,
+                RequestConfig(url: url,
                                  params: params.data(using: .utf8),
                                  httpMethod:.post,
                                  contentType: .urlEncoded))
@@ -143,7 +143,7 @@ class SFAuth {
 
     let request = URLRequestBuilder
       .request(with:
-                URLRequestConfig(url: url,
+                RequestConfig(url: url,
                                  params: params.data(using: .utf8),
                                  httpMethod: .post,
                                  contentType: .urlEncoded))
