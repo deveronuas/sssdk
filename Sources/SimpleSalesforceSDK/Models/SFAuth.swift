@@ -133,7 +133,7 @@ class SFAuth {
   /// Including whether this token is currently active, expiry, originally issued
   func interospectAccessToken(config: SFConfig, completionHandler: @escaping ((Error?) -> Void)) {
 
-    let url = try! URLBuilder.refreshTokenURL(urlString: config.host)
+    let url = try! URLBuilder.introspectURL(urlString: config.host)
 
     let params = "token=\(self.accessToken!)" +
     "&client_id=\(config.clientId)" +
