@@ -90,7 +90,8 @@ class SFAuth {
     
     let params: String  = "grant_type=refresh_token" +
     "&client_id=\(config.clientId)" +
-    "&refresh_token=\(refreshToken)"
+    "&refresh_token=\(refreshToken)" +
+    "&client_secret=\(config.clientSecret)"
 
     let url = try! URLBuilder.refreshTokenURL(urlString: config.host)
     let request = URLRequestBuilder
