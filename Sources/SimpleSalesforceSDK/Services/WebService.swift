@@ -101,11 +101,11 @@ class WebService {
         withJSONObject: fieldUpdates, options: .prettyPrinted)
 
       let url = "\(config.host)services/data/v54.0/sobjects/\(objectName)/\(id)"
-     guard let fetchUrl = URL(string: "\(url)")
+      guard let fetchUrl = URL(string: "\(url)")
       else {
-       completionHandler(SSSDKError.invalidUrlError)
-       return
-     }
+        completionHandler(SSSDKError.invalidUrlError)
+        return
+      }
 
       var request = URLRequest(url: fetchUrl)
       request.httpMethod = "PATCH"
