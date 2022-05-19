@@ -5,18 +5,19 @@ class SSSDKTests: XCTestCase {
 
   /// When sssdk is configured
   func testShouldNotRunTimeThrowError () throws {
-    let customRunTimeError = ConfigurationError
-      .runtimeError("SSSDK not configured yet")
-      .localizedDescription
+    let customRunTimeError = SSSDKError.invalidConfigurationError.localizedDescription
+    
     SSSDK.shared.configure(host: "https://www.google.com/?client=safari",
                            redirectUri: "appUrl://test",
                            clientId: "testclientid",
                            clientSecret: "testclientsecret")
     let url = try XCTUnwrap(URL(string: MockData().mockReceivedUrl))
     XCTAssertNotNil(url)
-    SSSDK.shared.handleAuthRedirect(urlReceived: url)
+    try! SSSDK.shared.handleAuthRedirect(urlReceived: url) { _ in }
     XCTAssertNoThrow(try SSSDK.shared.loginView(), customRunTimeError)
-    XCTAssertNoThrow(try SSSDK.shared.refershAccessToken(), customRunTimeError)
+    XCTAssertNoThrow(try SSSDK.shared.refershAccessToken() { error in
+      XCTAssertNotNil(error)
+    }, customRunTimeError)
   }
 
   /// When Access Token is not provided
@@ -26,12 +27,10 @@ class SSSDKTests: XCTestCase {
                            clientId: "testclientid",
                            clientSecret: "testclientsecret")
 
-    let customRunTimeError = ConfigurationError
-      .runtimeError("Access Token missing")
-      .localizedDescription
+    let customRunTimeError = SSSDKError.invalidConfigurationError.localizedDescription
 
     XCTAssertThrowsError(
-      try SSSDK.shared.fetchData(by: "", completionHandler: { data in
+      try SSSDK.shared.fetchData(by: "", completionHandler: { data, error in
       })) { error in
         XCTAssertEqual(error.localizedDescription,customRunTimeError)
       }
@@ -40,6 +39,6 @@ class SSSDKTests: XCTestCase {
   func testHandleRedirect () throws {
     let url = try XCTUnwrap(URL(string: MockData().mockReceivedUrl))
     XCTAssertNotNil(url)
-    SSSDK.shared.handleAuthRedirect(urlReceived: url)
+    try! SSSDK.shared.handleAuthRedirect(urlReceived: url) { _ in }
   }
 }

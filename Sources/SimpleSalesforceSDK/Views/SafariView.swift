@@ -9,7 +9,5 @@ public struct SafariView: UIViewControllerRepresentable {
     return SFSafariViewController(url: url)
   }
 
-  public func updateUIViewController(_ uiViewController: SFSafariViewController, context: UIViewControllerRepresentableContext<SafariView>) {
-
-  }
+  public func updateUIViewController(_ uiViewController: SFSafariViewController, context: UIViewControllerRepresentableContext<SafariView>) {}
 }
