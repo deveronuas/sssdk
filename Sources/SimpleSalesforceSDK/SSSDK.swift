@@ -107,9 +107,14 @@ public class SSSDK {
   public func logout(completionHandler: @escaping ((Error?) -> Void)) throws {
     try! confirmConfiguration()
 
-    self.auth.revokeAccessToken(config: config!,
-                                completionHandler: completionHandler)
-    self.auth.reset()
+    self.auth.revokeAccessToken(config: config!) { error in
+      if error != nil {
+        completionHandler(error)
+      } else {
+        self.auth.reset()
+        completionHandler(nil)
+      }
+    }
   }
 
   /// This method can be called at anytime to refresh the OAuth access token from the server.
