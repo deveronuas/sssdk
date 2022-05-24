@@ -109,9 +109,7 @@ public class SSSDK {
 
     self.auth.revokeAccessToken(config: config!,
                                 completionHandler: completionHandler)
-    DispatchQueue.main.async {
       self.auth.reset()
-    }
   }
 
   /// This method can be called at anytime to refresh the OAuth access token from the server.
