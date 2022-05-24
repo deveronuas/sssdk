@@ -58,6 +58,19 @@ public struct URLBuilder {
     }
     return refreshToneUrl
   }
+  ///  Creates URL for revoke access token api
+  /// - Parameters:
+  ///     - urlString: The Salesforce instance’s endpoint (or that of the experience cloud community).
+  /// - Throws: `SSSDKError.invalidUrlError` if the provided host url is invalid
+  /// - Returns: returns URL for introspect  access token api.
+  public static func revokeTokenURL(urlString: String) throws -> URL {
+    let host = verifyHost(host: urlString)
+    guard let revokeTokenUrl = URL(string: "\(host)services/oauth2/revoke")
+    else {
+      throw SSSDKError.invalidUrlError(url: host)
+    }
+    return revokeTokenUrl
+  }
   ///  Creates URL for fetchData api
   /// - Parameters:
   ///     - config: The Salesforce instance’s configuration.
