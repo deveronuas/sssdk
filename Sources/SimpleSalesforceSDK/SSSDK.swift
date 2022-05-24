@@ -99,9 +99,16 @@ public class SSSDK {
     return self.auth.isAuthenticated
   }
 
-  /// Erases all tokens and expiry date from keychain
+  /// Revokes the access token from salesforce and erases all tokens and expiry date from keychain
   public func logout() {
-    self.auth.reset()
+    self.auth.revokeAccessToken(config: config!) { error in
+      if let error = error {
+        print(error.localizedDescription)
+      }
+      DispatchQueue.main.async {
+        self.auth.reset()
+      }
+    }
   }
 
   /// This method can be called at anytime to refresh the OAuth access token from the server.

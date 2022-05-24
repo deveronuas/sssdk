@@ -171,4 +171,37 @@ class SFAuth {
 
     task.resume()
   }
+
+  /// Revokes the salesforce access token.
+  /// - Parameters:
+  ///     - config: The Salesforce instance’s configuration.
+  ///     - completionHandler: The block returns no value and takes the following parameter:
+  ///         - error: An error object that contains information about a problem, or nil if the request completed successfully.
+  ///
+  /// This method requests salesforce to invalidates and revokes the access token.
+  func revokeAccessToken(config: SFConfig, completionHandler: @escaping ((Error?) -> Void)) {
+
+    let url = try! URLBuilder.revokeTokenURL(urlString: config.host)
+
+    let params = "token=\(self.accessToken!)"
+
+    let request = URLRequestBuilder
+      .request(with:
+                RequestConfig(url: url,
+                              params: params.data(using: .utf8),
+                              httpMethod: .post,
+                              contentType: .urlEncoded))
+
+    let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
+      guard let response = response as? HTTPURLResponse else {return}
+
+      if (200...299).contains(response.statusCode) {
+        completionHandler(nil)
+      } else {
+        completionHandler(error)
+      }
+    })
+
+    task.resume()
+  }
 }
