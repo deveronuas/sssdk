@@ -99,9 +99,22 @@ public class SSSDK {
     return self.auth.isAuthenticated
   }
 
-  /// Erases all tokens and expiry date from keychain
-  public func logout() {
-    self.auth.reset()
+  /// Revokes the access token from salesforce and erases all tokens and expiry date from keychain
+  /// - Parameters:
+  ///     - completionHandler: The block returns no value and takes the following parameter:
+  ///         - error: An error object that contains information about a problem, or nil if the request completed successfully.
+  /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
+  public func logout(completionHandler: @escaping ((Error?) -> Void)) throws {
+    try! confirmConfiguration()
+
+    self.auth.revokeAccessToken(config: config!) { error in
+      if error != nil {
+        completionHandler(error)
+      } else {
+        self.auth.reset()
+        completionHandler(nil)
+      }
+    }
   }
 
   /// This method can be called at anytime to refresh the OAuth access token from the server.
