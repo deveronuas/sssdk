@@ -21,10 +21,12 @@ public class SSSDK {
 
   private init() {}
 
-  private func confirmConfiguration() throws {
-    if let config = config, !config.isValid {
+  private func fetchValidConfig() throws -> SFConfig {
+    guard let config = self.config, config.isValid else {
       throw SSSDKError.invalidConfigurationError
     }
+    
+    return config
   }
 
   /// Configure the SDK, these values are stored in memory
@@ -57,9 +59,9 @@ public class SSSDK {
   /// - Returns: A LoginView SwiftUI view object with the configured host and redirectUri
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
   public func loginView() throws -> some View {
-    try! confirmConfiguration()
+    let config = try! fetchValidConfig()
     
-    let url = try! URLBuilder.redirectURL(config: config!)
+    let url = try! URLBuilder.redirectURL(config: config)
 
     return LoginView(url: url)
   }
@@ -75,7 +77,7 @@ public class SSSDK {
   /// Our recommended solution is to use the `App` to handle the URL and use the environment
   /// observables to propagate and react to that changes accordingly.
   public func handleAuthRedirect(urlReceived: URL, completionHandler: @escaping ((Error?) -> Void)) throws {
-    try! confirmConfiguration()
+    let config = try! fetchValidConfig()
     
     let url = urlReceived.absoluteString
     var urlComponents: URLComponents? = URLComponents(string: url)
@@ -89,7 +91,7 @@ public class SSSDK {
         
         self.auth.accessToken = (temp["access_token"] ?? "") as String
         self.auth.refreshToken = ((temp["refresh_token"] ?? "") as String)
-        self.auth.interospectAccessToken(config: self.config!, completionHandler: completionHandler)
+        self.auth.interospectAccessToken(config: config, completionHandler: completionHandler)
       }
     }
   }
@@ -105,9 +107,9 @@ public class SSSDK {
   ///         - error: An error object that contains information about a problem, or nil if the request completed successfully.
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
   public func logout(completionHandler: @escaping ((Error?) -> Void)) throws {
-    try! confirmConfiguration()
+    let config = try! fetchValidConfig()
 
-    self.auth.revokeAccessToken(config: config!) { error in
+    self.auth.revokeAccessToken(config: config) { error in
       if error != nil {
         completionHandler(error)
       } else {
@@ -124,10 +126,10 @@ public class SSSDK {
   ///         - error: An error object that contains information about a problem, or nil if the request completed successfully.
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
   public func refershAccessToken(completionHandler: @escaping ((Error?) -> Void)) throws {
-    try! confirmConfiguration()
+    let config = try! fetchValidConfig()
 
     self.auth.refreshAccessToken(
-      config: self.config!,
+      config: config,
       completionHandler: completionHandler
     )
   }
@@ -141,10 +143,10 @@ public class SSSDK {
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
   public func fetchData(by query: String, completionHandler: @escaping ((Data?, Error?) -> Void))
   throws {
-    try! confirmConfiguration()
+    let config = try! fetchValidConfig()
 
     WebService.fetchData(
-      config: self.config!,
+      config: config,
       auth: self.auth,
       query: query,
       completionHandler: completionHandler
@@ -165,10 +167,10 @@ public class SSSDK {
     with fieldUpdates: [String:Any],
     completionHandler: @escaping ((Error?) -> Void)
   ) throws {
-    try! confirmConfiguration()
+    let config = try! fetchValidConfig()
 
     WebService.updateRecord(
-      config: self.config!,
+      config: config,
       auth: self.auth,
       id: objectId,
       objectName: objectName,
