@@ -20,14 +20,8 @@ public class SSSDK {
   private var auth: SFAuth = SFAuth()
 
   private init() {}
-
-  private func fetchValidConfig() throws -> SFConfig {
-    guard let config = self.config, config.isValid else {
-      throw SSSDKError.invalidConfigurationError
-    }
-    
-    return config
-  }
+  
+  // MARK: - Configuration
 
   /// Configure the SDK, these values are stored in memory
   /// - Parameters:
@@ -54,7 +48,9 @@ public class SSSDK {
       clientSecret: clientSecret
     )
   }
-
+  
+  // MARK: - Auth
+  
   /// Use this method to show a login flow
   /// - Returns: A LoginView SwiftUI view object with the configured host and redirectUri
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
@@ -76,7 +72,7 @@ public class SSSDK {
   /// Although, you could implement onOpenURL on any View, we recommend against it.
   /// Our recommended solution is to use the `App` to handle the URL and use the environment
   /// observables to propagate and react to that changes accordingly.
-  public func handleAuthRedirect(urlReceived: URL, completionHandler: @escaping ((Error?) -> Void)) throws {
+  public func handleAuthRedirect(urlReceived: URL) async throws {
     let config = try! fetchValidConfig()
     
     let url = urlReceived.absoluteString
@@ -91,66 +87,45 @@ public class SSSDK {
         
         self.auth.accessToken = (temp["access_token"] ?? "") as String
         self.auth.refreshToken = ((temp["refresh_token"] ?? "") as String)
-        self.auth.interospectAccessToken(config: config, completionHandler: completionHandler)
+        try! await self.auth.interospectAccessToken(config: config)
       }
     }
   }
+  
+  /// This method can be called at anytime to refresh the OAuth access token from the server.
+  /// It will extract the new `access_token` and store it in memory for use with API calls
+  /// - Throws: `SSSDKError` errors
+  public func refershAccessToken() async throws {
+    let config = try! fetchValidConfig()
+    
+    try! await self.auth.refreshAccessToken(config: config)
+  }
 
-  /// - Returns: This method returns true if user have the access token and refresh token.
+  /// - Returns: This method returns true if the access token and refresh token are saved in the keychain
   public func isAuthenticated() -> Bool {
     return self.auth.isAuthenticated
   }
 
   /// Revokes the access token from salesforce and erases all tokens and expiry date from keychain
-  /// - Parameters:
-  ///     - completionHandler: The block returns no value and takes the following parameter:
-  ///         - error: An error object that contains information about a problem, or nil if the request completed successfully.
-  /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
-  public func logout(completionHandler: @escaping ((Error?) -> Void)) throws {
+  /// - Throws: `SSSDKError` errors
+  public func logout() async throws {
     let config = try! fetchValidConfig()
 
-    self.auth.revokeAccessToken(config: config) { error in
-      if error != nil {
-        completionHandler(error)
-      } else {
-        self.auth.reset()
-        completionHandler(nil)
-      }
-    }
+    try! await self.auth.revokeAccessToken(config: config)
+    self.auth.reset()
   }
-
-  /// This method can be called at anytime to refresh the OAuth access token from the server.
-  /// It will extract the new `access_token` and store it in memory for use with API calls
-  /// - Parameters:
-  ///     - completionHandler: The block returns no value and takes the following parameter:
-  ///         - error: An error object that contains information about a problem, or nil if the request completed successfully.
-  /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
-  public func refershAccessToken(completionHandler: @escaping ((Error?) -> Void)) throws {
-    let config = try! fetchValidConfig()
-
-    self.auth.refreshAccessToken(
-      config: config,
-      completionHandler: completionHandler
-    )
-  }
+  
+  // MARK: - Data
 
   /// Fetches data using SOQL query
   /// - Parameters:
   ///     - query: SOQL query to fetch the data.
-  ///     - completionHandler: The block returns no value and takes the following parameter:
-  ///         - Data: when data fetch succeeds `data` is the optional Data from the salesforce.
-  ///         - Error: An error object that contains information about a problem, or nil if the request completed successfully.
-  /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
-  public func fetchData(by query: String, completionHandler: @escaping ((Data?, Error?) -> Void))
-  throws {
+  /// - Throws: `SSSDKError` errors
+  /// - Returns: `Data` results of the query returned by the salesforce server
+  public func fetchData(by query: String) async throws -> Data? {
     let config = try! fetchValidConfig()
 
-    WebService.fetchData(
-      config: config,
-      auth: self.auth,
-      query: query,
-      completionHandler: completionHandler
-    )
+    return try! await WebService.fetchData(config: config, auth: self.auth, query: query)
   }
 
   /// Updates salesforce record using sObject
@@ -158,24 +133,26 @@ public class SSSDK {
   ///     - objectName: Object name to update record.
   ///     - objectId: Record id to update record.
   ///     - fieldUpdates: Update record data.
-  ///     - completionHandler: The block returns no value and takes the following parameter:
-  ///        - error: An error object that contains information about a problem, or nil if the request completed successfully.
-  /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration.
-  public func update(
-    objectName: String,
-    objectId: String,
-    with fieldUpdates: [String:Any],
-    completionHandler: @escaping ((Error?) -> Void)
-  ) throws {
+  /// - Throws: `SSSDKError` errors
+  public func update(objectName: String, objectId: String, with fieldUpdates: [String:Any]) async throws {
     let config = try! fetchValidConfig()
 
-    WebService.updateRecord(
+    try! await WebService.updateRecord(
       config: config,
       auth: self.auth,
       id: objectId,
       objectName: objectName,
-      fieldUpdates: fieldUpdates,
-      completionHandler: completionHandler
+      fieldUpdates: fieldUpdates
     )
+  }
+  
+  // MARK: - Utilities
+  
+  private func fetchValidConfig() throws -> SFConfig {
+    guard let config = self.config, config.isValid else {
+      throw SSSDKError.invalidConfigurationError
+    }
+    
+    return config
   }
 }

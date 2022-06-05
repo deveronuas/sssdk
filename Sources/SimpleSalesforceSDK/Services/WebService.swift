@@ -9,61 +9,30 @@ class WebService {
   ///     - config: The Salesforce instance’s configuration.
   ///     - auth: The Salesforce authentication.
   ///     - query: SOQL query to fetch the data.
-  ///     - completionHandler: The block returns no value and takes the following parameter:
-  ///         - Data: when data fetch succeeds `data` is the optional Data from the salesforce.
-  ///         - Error: An error object that contains information about a problem, or nil if the request completed successfully.
   ///     - shouldRetry: If true, the request will be retried on a 401 auth error from Salesforce after attemting a refresh of access token
-  static func fetchData(
-    config: SFConfig,
-    auth: SFAuth,
-    query: String,
-    completionHandler: @escaping ((Data?, Error?) -> Void),
-    shouldRetry: Bool = true
-  ) {
-    auth.refreshAccessTokenIfNeeded(config: config) { bearerToken, error in
-      if error != nil {
-        completionHandler(nil, error)
-        return
-      }
-
-      let fetchUrl = try! URLBuilder.fetchDataURL(config: config,
-                                                  query: query)
-      let request = URLRequestBuilder
-        .request(with:
-                  RequestConfig(url: fetchUrl,
-                                   bearerToken: bearerToken,
-                                   httpMethod: .get,
-                                   contentType: .urlEncoded))
-
-      guard let expiry = KeychainService.accessTokenExpiryDate, expiry > Date.now else {
-        return
-      }
+  /// - Returns: If the fetch succeeds `Data` from salesforce is returned
+  static func fetchData(config: SFConfig, auth: SFAuth, query: String, shouldRetry: Bool = true) async throws -> Data? {
+    try! await auth.refreshAccessTokenIfNeeded(config: config)
+    
+    let fetchUrl = try! URLBuilder.fetchDataURL(config: config, query: query)
+    let requestConfig = RequestConfig(url: fetchUrl,
+                                      bearerToken: auth.bearerToken,
+                                      httpMethod: .get,
+                                      contentType: .urlEncoded)
+    let request = URLRequestBuilder.request(with: requestConfig)
+    
+    let (data, response) = try! await URLSession.shared.data(for: request)
+    
+    guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+      throw SSSDKError.notOk
+    }
+    
+    if httpResponse.statusCode == 401 && shouldRetry {
+      try! await auth.refreshAccessToken(config: config)
       
-      let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
-        guard let response = response as? HTTPURLResponse else {return}
-        if (200...299).contains(response.statusCode) {
-          completionHandler(data, nil)
-        } else if response.statusCode == 401 && shouldRetry {
-          auth.refreshAccessToken(config: config) { error in
-            if error != nil {
-              completionHandler(nil, error)
-              return
-            }
-            
-            fetchData(
-              config: config,
-              auth: auth,
-              query: query,
-              completionHandler: completionHandler,
-              shouldRetry: false // retry only once
-            )
-          }
-        } else {
-          completionHandler(nil, error)
-        }
-      })
-      
-      task.resume()
+      return try! await fetchData(config: config, auth: auth, query: query, shouldRetry: false)
+    } else {
+      return data
     }
   }
 
@@ -74,8 +43,6 @@ class WebService {
   ///     - id: Record id to update record.
   ///     - objectName: object name to update record.
   ///     - fieldUpdates: Update record data.
-  ///     - completionHandler: The block returns no value and takes the following parameter:
-  ///         - error: An error object that contains information about a problem, or nil if the request completed successfully.
   ///     - shouldRetry: If true, the request will be retried on a 401 auth error from Salesforce after attemting a refresh of access token
   static func updateRecord(
     config: SFConfig,
@@ -83,58 +50,41 @@ class WebService {
     id: String,
     objectName: String,
     fieldUpdates: [String: Any],
-    completionHandler: @escaping ((Error?) -> Void),
     shouldRetry: Bool = true
-  ) {
-    auth.refreshAccessTokenIfNeeded(config: config) { bearerToken, error in
-      if error != nil {
-        completionHandler(error)
-        return
-      }
+  ) async throws {
+    try! await auth.refreshAccessTokenIfNeeded(config: config)
       
-      let jsonData = try? JSONSerialization.data(
-        withJSONObject: fieldUpdates, options: .prettyPrinted)
+    let jsonData = try? JSONSerialization.data(withJSONObject: fieldUpdates, options: .prettyPrinted)
 
-      let fetchUrl = try! URLBuilder.updateDataURL(config: config,
-                                                   objectName: objectName,
-                                                   id: id)
-      let request = URLRequestBuilder
-        .request(with:
-                  RequestConfig(url: fetchUrl,
-                                   params: jsonData,
-                                   bearerToken: bearerToken,
-                                   httpMethod: .patch,
-                                   contentType: .json))
+    let fetchUrl = try! URLBuilder.updateDataURL(config: config, objectName: objectName, id: id)
+    let requestConfig = RequestConfig(url: fetchUrl,
+                                      params: jsonData,
+                                      bearerToken: auth.bearerToken,
+                                      httpMethod: .patch,
+                                      contentType: .json)
+    let request = URLRequestBuilder.request(with: requestConfig)
 
 
-      let task = URLSession.shared.dataTask(with: request, completionHandler: { data, response, error in
-        let response = response as! HTTPURLResponse
+    let (_, response) = try! await URLSession.shared.data(for: request)
+    guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+      throw SSSDKError.notOk
+    }
 
-        if response.statusCode == 204 {
-          completionHandler(nil)
-        } else if response.statusCode == 401 && shouldRetry {
-          auth.refreshAccessToken(config: config) { error in
-            if error != nil {
-              completionHandler(error)
-              return
-            }
-            
-            updateRecord(
-              config: config,
-              auth: auth,
-              id: id,
-              objectName: objectName,
-              fieldUpdates: fieldUpdates,
-              completionHandler: completionHandler,
-              shouldRetry: false // retry only once
-            )
-          }
-        } else {
-          completionHandler(error)
-        }
-      })
-
-      task.resume()
+    if httpResponse.statusCode == 401 && shouldRetry {
+      try! await auth.refreshAccessToken(config: config)
+        
+      try! await updateRecord(
+        config: config,
+        auth: auth,
+        id: id,
+        objectName: objectName,
+        fieldUpdates: fieldUpdates,
+        shouldRetry: false // retry only once
+      )
+    } else if httpResponse.statusCode == 204 {
+      return
+    } else {
+      throw SSSDKError.updateFailed(jsonData: "")
     }
   }
 }
