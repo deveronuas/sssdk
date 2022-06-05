@@ -54,7 +54,6 @@ class SFAuth {
   /// Fetches a new access token only if it is already expired and stores it to Keychain
   /// - Parameters:
   ///     - config: The Salesforce instance’s configuration.
-  ///
   /// This will also call `interospectAccessToken` to reset the expiry
   func refreshAccessTokenIfNeeded(config: SFConfig) async throws {
     guard !self.isAccessTokenValid else { return }
@@ -65,7 +64,6 @@ class SFAuth {
   /// Fetches a new access token and stores it to Keychain
   /// - Parameters:
   ///     - config: The Salesforce instance’s configuration.
-  ///
   /// This will also call `interospectAccessToken` to reset the expiry
   func refreshAccessToken(config: SFConfig) async throws {
     guard let refreshToken = self.refreshToken else {
@@ -78,13 +76,10 @@ class SFAuth {
     "&client_secret=\(config.clientSecret)"
 
     let url = try! URLBuilder.refreshTokenURL(urlString: config.host)
-    let requestConfig = RequestConfig(url: url,
-                                      params: params.data(using: .utf8),
-                                      httpMethod:.post,
-                                      contentType: .urlEncoded)
+    let requestConfig = RequestConfig(url: url, params: params.data(using: .utf8))
     let request = URLRequestBuilder.request(with: requestConfig)
 
-    let data = try! await fetchData(for: request)
+    let (data, _) = try! await WebService.makeRequest(request)
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .secondsSince1970
     let responseData = try! decoder.decode(RefreshTokenResponse.self, from: data)
@@ -106,13 +101,10 @@ class SFAuth {
     "&client_secret=\(config.clientSecret)" +
     "&token_type_hint=access_token"
 
-    let requestConfig = RequestConfig(url: url,
-                                      params: params.data(using: .utf8),
-                                      httpMethod: .post,
-                                      contentType: .urlEncoded)
+    let requestConfig = RequestConfig(url: url, params: params.data(using: .utf8))
     let request = URLRequestBuilder.request(with: requestConfig)
     
-    let data = try! await fetchData(for: request)
+    let (data, _) = try! await WebService.makeRequest(request)
     let responseData = try! JSONDecoder().decode(IntrospectResponse.self, from: data)
     
     let expiryDate = Date(timeIntervalSince1970: TimeInterval(responseData.accessTokenExpiryDate))
@@ -128,25 +120,9 @@ class SFAuth {
     let url = try! URLBuilder.revokeTokenURL(urlString: config.host)
 
     let params = "token=\(self.accessToken!)"
-    let requestConfig = RequestConfig(url: url,
-                                      params: params.data(using: .utf8),
-                                      httpMethod: .post,
-                                      contentType: .urlEncoded)
+    let requestConfig = RequestConfig(url: url, params: params.data(using: .utf8))
     let request = URLRequestBuilder.request(with: requestConfig)
 
-    let _ = try! await fetchData(for: request)
-  }
-  
-  private func fetchData(for request: URLRequest) async throws -> Data {
-    let (data, response) = try! await URLSession.shared.data(for: request)
-    
-    guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode >= 200 && httpResponse.statusCode < 299 else {
-      if let jsonString = String(data: data, encoding: .utf8) {
-        print(jsonString)
-      }
-      throw SSSDKError.notOk
-    }
-    
-    return data
+    let _ = try! await WebService.makeRequest(request)
   }
 }

@@ -13,23 +13,16 @@ class WebService {
   /// - Returns: If the fetch succeeds `Data` from salesforce is returned
   static func fetchData(config: SFConfig, auth: SFAuth, query: String, shouldRetry: Bool = true) async throws -> Data? {
     try! await auth.refreshAccessTokenIfNeeded(config: config)
-    
+
     let fetchUrl = try! URLBuilder.fetchDataURL(config: config, query: query)
-    let requestConfig = RequestConfig(url: fetchUrl,
-                                      bearerToken: auth.bearerToken,
-                                      httpMethod: .get,
-                                      contentType: .urlEncoded)
+    let requestConfig = RequestConfig(url: fetchUrl, params: nil, method: .get, bearerToken: auth.bearerToken)
     let request = URLRequestBuilder.request(with: requestConfig)
-    
-    let (data, response) = try! await URLSession.shared.data(for: request)
-    
-    guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-      throw SSSDKError.notOk
-    }
-    
-    if httpResponse.statusCode == 401 && shouldRetry {
+
+    let (data, statusCode) = try! await WebService.makeRequest(request, ignore401: true)
+
+    if shouldRetry && statusCode == 401 {
       try! await auth.refreshAccessToken(config: config)
-      
+
       return try! await fetchData(config: config, auth: auth, query: query, shouldRetry: false)
     } else {
       return data
@@ -53,26 +46,23 @@ class WebService {
     shouldRetry: Bool = true
   ) async throws {
     try! await auth.refreshAccessTokenIfNeeded(config: config)
-      
+
     let jsonData = try? JSONSerialization.data(withJSONObject: fieldUpdates, options: .prettyPrinted)
 
     let fetchUrl = try! URLBuilder.updateDataURL(config: config, objectName: objectName, id: id)
     let requestConfig = RequestConfig(url: fetchUrl,
                                       params: jsonData,
-                                      bearerToken: auth.bearerToken,
-                                      httpMethod: .patch,
-                                      contentType: .json)
+                                      method: .patch,
+                                      contentType: .json,
+                                      bearerToken: auth.bearerToken)
     let request = URLRequestBuilder.request(with: requestConfig)
 
 
-    let (_, response) = try! await URLSession.shared.data(for: request)
-    guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-      throw SSSDKError.notOk
-    }
+    let (_, statusCode) = try! await WebService.makeRequest(request, ignore401: true)
 
-    if httpResponse.statusCode == 401 && shouldRetry {
+    if statusCode == 401 && shouldRetry {
       try! await auth.refreshAccessToken(config: config)
-        
+
       try! await updateRecord(
         config: config,
         auth: auth,
@@ -81,10 +71,27 @@ class WebService {
         fieldUpdates: fieldUpdates,
         shouldRetry: false // retry only once
       )
-    } else if httpResponse.statusCode == 204 {
-      return
     } else {
-      throw SSSDKError.updateFailed(jsonData: "")
+      return
     }
+  }
+
+  // MARK: - Utilities
+
+  static func makeRequest(_ request: URLRequest, ignore401: Bool = false) async throws -> (Data, Int) {
+    let (data, response) = try! await URLSession.shared.data(for: request)
+    guard let httpResponse = response as? HTTPURLResponse else {
+      throw SSSDKError.notOk
+    }
+
+    let statusCode = httpResponse.statusCode
+    guard statusCode >= 200 && statusCode < 299 || (ignore401 && statusCode == 401) else {
+      if let jsonString = String(data: data, encoding: .utf8) {
+        print(jsonString)
+      }
+      throw SSSDKError.notOk
+    }
+
+    return (data, statusCode)
   }
 }
