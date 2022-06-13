@@ -2,11 +2,11 @@ import Foundation
 
 public struct RequestConfig {
   var url: URL
-  var params: Data?
-  var bearerToken: String?
-  var httpMethod = HTTPMethod.get
+  var params: Data? = nil
+  var method = HTTPMethod.post
   var contentType = RequestContentType.urlEncoded
-
+  var bearerToken: String? = nil
+  
   enum HTTPMethod: String {
     case get = "GET"
     case head = "HEAD"
@@ -33,14 +33,14 @@ public struct URLRequestBuilder {
   public static func request(with config: RequestConfig) -> URLRequest {
 
     var request = URLRequest(url: config.url)
-    request.httpMethod = config.httpMethod.rawValue
+    request.httpMethod = config.method.rawValue
     request.setValue(config.contentType.rawValue,
                      forHTTPHeaderField: "Content-Type")
     
     if let bearerToken = config.bearerToken {
       request.setValue(bearerToken, forHTTPHeaderField: "Authorization")
     }
-    if let params =  config.params {
+    if let params = config.params {
       request.httpBody = params
     }
     return request

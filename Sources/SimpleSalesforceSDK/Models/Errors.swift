@@ -7,6 +7,9 @@ public enum SSSDKError: Error {
   case authNoRefreshTokenError
   case authRefreshFailedError
   case authIntrospectFailedError
+  case notOk
+  case noData
+  case updateFailed(jsonData: String)
   case invalidUrlError(url: String)
   case unknown(desc: String)
 }
@@ -24,6 +27,12 @@ extension SSSDKError: CustomStringConvertible {
         return "Refreshing access token failed, try login again."
       case .authIntrospectFailedError:
         return "Introspecting access token failed, try login again."
+      case .notOk:
+        return "Server response for this request is not HTTP 200."
+      case .noData:
+        return "Server responded without any data."
+      case .updateFailed(let jsonData):
+        return "Updating data on the server failed. Error: \(jsonData)"
       case .invalidUrlError(let url):
         return "The provided URL (\(url)) is invalid"
       case .unknown(let desc):
@@ -45,6 +54,12 @@ extension SSSDKError: LocalizedError {
         return NSLocalizedString(self.description, comment: "Refresh Failure")
       case .authIntrospectFailedError:
         return NSLocalizedString(self.description, comment: "Introspect Failure")
+      case .notOk:
+        return NSLocalizedString(self.description, comment: "Non 200 Server Response")
+      case .noData:
+        return NSLocalizedString(self.description, comment: "Empty Data Response")
+      case .updateFailed(_):
+        return NSLocalizedString(self.description, comment: "Update Data Failure")
       case .invalidUrlError:
         return NSLocalizedString(self.description, comment: "Invalid url")
       case .unknown(let desc):

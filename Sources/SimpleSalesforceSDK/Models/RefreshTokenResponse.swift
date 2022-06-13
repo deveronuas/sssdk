@@ -2,8 +2,8 @@ import Foundation
 
 struct RefreshTokenResponse: Decodable {
   let accessToken: String
-  let sfdcCommunityUrl: String
-  let sfdcCommunityId: String
+  let sfdcCommunityUrl: String?
+  let sfdcCommunityId: String?
   let signature: String
   let scope: String
   let instanceUrl: String
