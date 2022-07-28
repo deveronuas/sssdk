@@ -57,8 +57,13 @@ class SFAuth {
   /// This will also call `interospectAccessToken` to reset the expiry
   func refreshAccessTokenIfNeeded(config: SFConfig) async throws {
     guard !self.isAccessTokenValid else { return }
-    
-    try! await self.refreshAccessToken(config: config)
+    do {
+      try await self.refreshAccessToken(config: config)
+    } catch {
+      KeychainService.clearAll()
+      print("Error while refreshing the access token...")
+      print(String(describing: error))
+    }
   }
   
   /// Fetches a new access token and stores it to Keychain
