@@ -79,13 +79,19 @@ class SFAuth {
     let requestConfig = RequestConfig(url: url, params: params.data(using: .utf8))
     let request = URLRequestBuilder.request(with: requestConfig)
 
-    let (data, _) = try! await WebService.makeRequest(request)
-    let decoder = JSONDecoder()
-    decoder.dateDecodingStrategy = .secondsSince1970
-    let responseData = try! decoder.decode(RefreshTokenResponse.self, from: data)
+    do {
+      let (data, _) = try await WebService.makeRequest(request)
+      let decoder = JSONDecoder()
+      decoder.dateDecodingStrategy = .secondsSince1970
+      let responseData = try! decoder.decode(RefreshTokenResponse.self, from: data)
 
-    self.accessToken = responseData.accessToken
-    try! await self.interospectAccessToken(config: config)
+      self.accessToken = responseData.accessToken
+      try! await self.interospectAccessToken(config: config)
+    } catch {
+      self.reset()
+      print("Error while refreshing the access token...")
+      print(String(describing: error))
+    }
   }
   
   ///  To check the current state of an OAuth 2.0 access token and store expiry it to Keychain
