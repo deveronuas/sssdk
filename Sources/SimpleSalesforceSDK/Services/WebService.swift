@@ -22,7 +22,7 @@ class WebService {
 
     if shouldRetry && statusCode == 401 {
       do {
-        try! await auth.refreshAccessToken(config: config)
+        try await auth.refreshAccessToken(config: config)
       } catch {
         self.reset()
         print("Error while refreshing the access token...")
@@ -82,7 +82,7 @@ class WebService {
   }
 
   // MARK: - Utilities
-  
+
   static func makeRequest(_ request: URLRequest, ignore401: Bool = false) async throws -> (Data, Int) {
     let (data, response) = try! await URLSession.shared.data(for: request)
     guard let httpResponse = response as? HTTPURLResponse else {
