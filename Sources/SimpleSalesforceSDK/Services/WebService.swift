@@ -24,6 +24,7 @@ class WebService {
       do {
         try await auth.refreshAccessToken(config: config)
       } catch {
+        return String(describing: error).data(using: .utf8)
         KeychainService.clearAll()
         print("Error while refreshing the access token...")
         print(String(describing: error))
