@@ -29,6 +29,7 @@ class WebService {
         print("Error while refreshing the access token...")
         print(String(describing: error))
       }
+      return nil 
 //      return try! await fetchData(config: config, auth: auth, query: query, shouldRetry: false)
     } else {
       return data
