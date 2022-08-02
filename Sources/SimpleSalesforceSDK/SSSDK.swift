@@ -10,19 +10,19 @@ import SwiftUI
 ///
 /// Once authenticated, you can also use this class to make API calls to Salesforce.
 public class SSSDK {
-
+  
   /// SSSDK is a singleton, use this variable to access it's methods
   public static let shared = SSSDK()
-
+  
   // MARK: Representation Properties
-
+  
   private var config: SFConfig?
   private var auth: SFAuth = SFAuth()
-
+  
   private init() {}
   
   // MARK: - Configuration
-
+  
   /// Configure the SDK, these values are stored in memory
   /// - Parameters:
   ///     - host: The Salesforce instance’s endpoint (or that of the experience cloud community)
@@ -58,10 +58,10 @@ public class SSSDK {
     let config = try! fetchValidConfig()
     
     let url = try! URLBuilder.redirectURL(config: config)
-
+    
     return LoginView(url: url)
   }
-
+  
   /// This method should be called within your app's handler for the auth redirect URI.
   /// It will extract the `access_token` and `refresh_token`, by parsing the supplied URL.
   /// Then save them to keychain.
@@ -77,7 +77,7 @@ public class SSSDK {
     
     let url = urlReceived.absoluteString
     var urlComponents: URLComponents? = URLComponents(string: url)
-
+    
     if let fragment = urlComponents?.fragment {
       urlComponents?.query = fragment
       if let queryItems = urlComponents?.queryItems {
@@ -100,23 +100,23 @@ public class SSSDK {
     
     try! await self.auth.refreshAccessToken(config: config)
   }
-
+  
   /// - Returns: This method returns true if the access token and refresh token are saved in the keychain
   public func isAuthenticated() -> Bool {
     return self.auth.isAuthenticated
   }
-
+  
   /// Revokes the access token from salesforce and erases all tokens and expiry date from keychain
   /// - Throws: `SSSDKError` errors
   public func logout() async throws {
     let config = try! fetchValidConfig()
-
+    
     try! await self.auth.revokeAccessToken(config: config)
     self.auth.reset()
   }
   
   // MARK: - Data
-
+  
   /// Fetches data using SOQL query
   /// - Parameters:
   ///     - query: SOQL query to fetch the data.
@@ -130,7 +130,7 @@ public class SSSDK {
       throw error
     }
   }
-
+  
   /// Updates salesforce record using sObject
   /// - Parameters:
   ///     - objectName: Object name to update record.
@@ -139,14 +139,17 @@ public class SSSDK {
   /// - Throws: `SSSDKError` errors
   public func update(objectName: String, objectId: String, with fieldUpdates: [String:Any]) async throws {
     let config = try! fetchValidConfig()
-
-    try! await WebService.updateRecord(
-      config: config,
-      auth: self.auth,
-      id: objectId,
-      objectName: objectName,
-      fieldUpdates: fieldUpdates
-    )
+    do {
+      try await WebService.updateRecord(
+        config: config,
+        auth: self.auth,
+        id: objectId,
+        objectName: objectName,
+        fieldUpdates: fieldUpdates
+      )
+    } catch {
+      throw error
+    }
   }
   
   // MARK: - Utilities

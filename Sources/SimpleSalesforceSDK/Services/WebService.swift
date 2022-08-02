@@ -84,19 +84,25 @@ class WebService {
         print(String(describing: error))
         throw error
       }
-      try! await updateRecord(
-        config: config,
-        auth: auth,
-        id: id,
-        objectName: objectName,
-        fieldUpdates: fieldUpdates,
-        shouldRetry: true // retry only once
-      )
+
+      do {
+        try await updateRecord(
+          config: config,
+          auth: auth,
+          id: id,
+          objectName: objectName,
+          fieldUpdates: fieldUpdates,
+          shouldRetry: true // retry only once
+        )
+      } catch {
+        throw error
+      }
+
     } else {
       return
     }
   }
-
+  
   // MARK: - Utilities
 
   static func makeRequest(_ request: URLRequest, ignore401: Bool = false) async throws -> (Data, Int) {
