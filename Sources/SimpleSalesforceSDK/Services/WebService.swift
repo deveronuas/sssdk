@@ -29,7 +29,16 @@ class WebService {
         print(String(describing: error))
         throw error
       }
-      return try! await fetchData(config: config, auth: auth, query: query, shouldRetry: true)
+
+      do {
+        return try await fetchData(config: config, auth: auth, query: query, shouldRetry: true)
+      } catch {
+        KeychainService.clearAll()
+        print("Error while refreshing the access token...")
+        print(String(describing: error))
+        throw error
+      }
+
     } else {
       return data
     }
