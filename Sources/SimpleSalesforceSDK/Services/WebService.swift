@@ -24,10 +24,10 @@ class WebService {
       do {
         try await auth.refreshAccessToken(config: config)
       } catch {
-        return String(describing: error).data(using: .utf8)
         KeychainService.clearAll()
         print("Error while refreshing the access token...")
         print(String(describing: error))
+        throw error
       }
       return try! await fetchData(config: config, auth: auth, query: query, shouldRetry: true)
     } else {
@@ -67,15 +67,21 @@ class WebService {
     let (_, statusCode) = try! await WebService.makeRequest(request, ignore401: true)
 
     if statusCode == 401 && shouldRetry {
-      try! await auth.refreshAccessToken(config: config)
-
+      do {
+        try await auth.refreshAccessToken(config: config)
+      } catch {
+        KeychainService.clearAll()
+        print("Error while refreshing the access token...")
+        print(String(describing: error))
+        throw error
+      }
       try! await updateRecord(
         config: config,
         auth: auth,
         id: id,
         objectName: objectName,
         fieldUpdates: fieldUpdates,
-        shouldRetry: false // retry only once
+        shouldRetry: true // retry only once
       )
     } else {
       return
