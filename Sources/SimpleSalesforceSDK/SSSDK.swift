@@ -110,8 +110,11 @@ public class SSSDK {
   /// - Throws: `SSSDKError` errors
   public func logout() async throws {
     let config = try! fetchValidConfig()
-    
-    try! await self.auth.revokeAccessToken(config: config)
+    do {
+      try await self.auth.revokeAccessToken(config: config)
+    } catch {
+      throw error
+    }
     self.auth.reset()
   }
   

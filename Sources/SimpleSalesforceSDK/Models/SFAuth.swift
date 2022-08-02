@@ -114,12 +114,16 @@ class SFAuth {
 
     let requestConfig = RequestConfig(url: url, params: params.data(using: .utf8))
     let request = URLRequestBuilder.request(with: requestConfig)
-    
-    let (data, _) = try! await WebService.makeRequest(request)
-    let responseData = try! JSONDecoder().decode(IntrospectResponse.self, from: data)
-    
-    let expiryDate = Date(timeIntervalSince1970: TimeInterval(responseData.accessTokenExpiryDate))
-    self.accessTokenExpiryDate = expiryDate
+
+    do {
+      let (data, _) = try await WebService.makeRequest(request)
+      let responseData = try! JSONDecoder().decode(IntrospectResponse.self, from: data)
+
+      let expiryDate = Date(timeIntervalSince1970: TimeInterval(responseData.accessTokenExpiryDate))
+      self.accessTokenExpiryDate = expiryDate
+    } catch {
+      throw error
+    }
   }
 
   /// Revokes the salesforce access token.
@@ -134,6 +138,10 @@ class SFAuth {
     let requestConfig = RequestConfig(url: url, params: params.data(using: .utf8))
     let request = URLRequestBuilder.request(with: requestConfig)
 
-    let _ = try! await WebService.makeRequest(request)
+    do {
+      let _ = try await WebService.makeRequest(request)
+    } catch {
+      throw error
+    }
   }
 }
