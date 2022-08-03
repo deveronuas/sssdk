@@ -12,7 +12,7 @@ class WebService {
   ///     - shouldRetry: If true, the request will be retried on a 401 auth error from Salesforce after attemting a refresh of access token
   /// - Returns: If the fetch succeeds `Data` from salesforce is returned
   static func fetchData(config: SFConfig, auth: SFAuth, query: String, shouldRetry: Bool = true) async throws -> Data? {
-    try! await auth.refreshAccessTokenIfNeeded(config: config)
+    try await auth.refreshAccessTokenIfNeeded(config: config)
 
     let fetchUrl = try! URLBuilder.fetchDataURL(config: config, query: query)
     let requestConfig = RequestConfig(url: fetchUrl, params: nil, method: .get, bearerToken: auth.bearerToken)
@@ -21,23 +21,8 @@ class WebService {
     let (data, statusCode) = try! await WebService.makeRequest(request, ignore401: true)
 
     if shouldRetry && statusCode == 401 {
-      do {
         try await auth.refreshAccessToken(config: config)
-      } catch {
-        KeychainService.clearAll()
-        print("Error while refreshing the access token...")
-        print(String(describing: error))
-        throw error
-      }
-
-      do {
         return try await fetchData(config: config, auth: auth, query: query, shouldRetry: true)
-      } catch {
-        KeychainService.clearAll()
-        print("Error while refreshing the access token...")
-        print(String(describing: error))
-        throw error
-      }
 
     } else {
       return data
@@ -60,7 +45,7 @@ class WebService {
     fieldUpdates: [String: Any],
     shouldRetry: Bool = true
   ) async throws {
-    try! await auth.refreshAccessTokenIfNeeded(config: config)
+    try await auth.refreshAccessTokenIfNeeded(config: config)
 
     let jsonData = try? JSONSerialization.data(withJSONObject: fieldUpdates, options: .prettyPrinted)
 
@@ -76,16 +61,7 @@ class WebService {
     let (_, statusCode) = try! await WebService.makeRequest(request, ignore401: true)
 
     if statusCode == 401 && shouldRetry {
-      do {
         try await auth.refreshAccessToken(config: config)
-      } catch {
-        KeychainService.clearAll()
-        print("Error while refreshing the access token...")
-        print(String(describing: error))
-        throw error
-      }
-
-      do {
         try await updateRecord(
           config: config,
           auth: auth,
@@ -94,10 +70,6 @@ class WebService {
           fieldUpdates: fieldUpdates,
           shouldRetry: true // retry only once
         )
-      } catch {
-        throw error
-      }
-
     } else {
       return
     }

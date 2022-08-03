@@ -57,13 +57,7 @@ class SFAuth {
   /// This will also call `interospectAccessToken` to reset the expiry
   func refreshAccessTokenIfNeeded(config: SFConfig) async throws {
     guard !self.isAccessTokenValid else { return }
-    do {
       try await self.refreshAccessToken(config: config)
-    } catch {
-      self.reset()
-      print("Error while refreshing the access token...")
-      print(String(describing: error))
-    }
   }
   
   /// Fetches a new access token and stores it to Keychain
@@ -115,15 +109,11 @@ class SFAuth {
     let requestConfig = RequestConfig(url: url, params: params.data(using: .utf8))
     let request = URLRequestBuilder.request(with: requestConfig)
 
-    do {
       let (data, _) = try await WebService.makeRequest(request)
       let responseData = try! JSONDecoder().decode(IntrospectResponse.self, from: data)
 
       let expiryDate = Date(timeIntervalSince1970: TimeInterval(responseData.accessTokenExpiryDate))
       self.accessTokenExpiryDate = expiryDate
-    } catch {
-      throw error
-    }
   }
 
   /// Revokes the salesforce access token.
@@ -138,10 +128,6 @@ class SFAuth {
     let requestConfig = RequestConfig(url: url, params: params.data(using: .utf8))
     let request = URLRequestBuilder.request(with: requestConfig)
 
-    do {
       let _ = try await WebService.makeRequest(request)
-    } catch {
-      throw error
-    }
   }
 }

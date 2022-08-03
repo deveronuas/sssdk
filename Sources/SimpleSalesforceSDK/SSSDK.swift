@@ -98,7 +98,7 @@ public class SSSDK {
   public func refershAccessToken() async throws {
     let config = try! fetchValidConfig()
     
-    try! await self.auth.refreshAccessToken(config: config)
+    try await self.auth.refreshAccessToken(config: config)
   }
   
   /// - Returns: This method returns true if the access token and refresh token are saved in the keychain
@@ -110,11 +110,7 @@ public class SSSDK {
   /// - Throws: `SSSDKError` errors
   public func logout() async throws {
     let config = try! fetchValidConfig()
-    do {
       try await self.auth.revokeAccessToken(config: config)
-    } catch {
-      throw error
-    }
     self.auth.reset()
   }
   
@@ -127,11 +123,7 @@ public class SSSDK {
   /// - Returns: `Data` results of the query returned by the salesforce server
   public func fetchData(by query: String) async throws -> Data? {
     let config = try! fetchValidConfig()
-    do {
       return try await WebService.fetchData(config: config, auth: self.auth, query: query)
-    } catch {
-      throw error
-    }
   }
   
   /// Updates salesforce record using sObject
@@ -142,7 +134,6 @@ public class SSSDK {
   /// - Throws: `SSSDKError` errors
   public func update(objectName: String, objectId: String, with fieldUpdates: [String:Any]) async throws {
     let config = try! fetchValidConfig()
-    do {
       try await WebService.updateRecord(
         config: config,
         auth: self.auth,
@@ -150,9 +141,6 @@ public class SSSDK {
         objectName: objectName,
         fieldUpdates: fieldUpdates
       )
-    } catch {
-      throw error
-    }
   }
   
   // MARK: - Utilities
