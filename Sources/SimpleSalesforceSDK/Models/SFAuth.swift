@@ -60,7 +60,7 @@ class SFAuth {
     do {
       try await self.refreshAccessToken(config: config)
     } catch {
-      KeychainService.clearAll()
+      self.reset()
       print("Error while refreshing the access token...")
       print(String(describing: error))
     }
