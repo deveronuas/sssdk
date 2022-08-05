@@ -110,7 +110,7 @@ public class SSSDK {
   /// - Throws: `SSSDKError` errors
   public func logout() async throws {
     let config = try! fetchValidConfig()
-      try await self.auth.revokeAccessToken(config: config)
+    try await self.auth.revokeAccessToken(config: config)
     self.auth.reset()
   }
   
@@ -123,7 +123,7 @@ public class SSSDK {
   /// - Returns: `Data` results of the query returned by the salesforce server
   public func fetchData(by query: String) async throws -> Data? {
     let config = try! fetchValidConfig()
-      return try await WebService.fetchData(config: config, auth: self.auth, query: query)
+    return try await WebService.fetchData(config: config, auth: self.auth, query: query)
   }
   
   /// Updates salesforce record using sObject
@@ -134,13 +134,13 @@ public class SSSDK {
   /// - Throws: `SSSDKError` errors
   public func update(objectName: String, objectId: String, with fieldUpdates: [String:Any]) async throws {
     let config = try! fetchValidConfig()
-      try await WebService.updateRecord(
-        config: config,
-        auth: self.auth,
-        id: objectId,
-        objectName: objectName,
-        fieldUpdates: fieldUpdates
-      )
+    try await WebService.updateRecord(
+      config: config,
+      auth: self.auth,
+      id: objectId,
+      objectName: objectName,
+      fieldUpdates: fieldUpdates
+    )
   }
   
   // MARK: - Utilities

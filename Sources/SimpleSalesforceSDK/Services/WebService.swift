@@ -13,22 +13,18 @@ class WebService {
   /// - Returns: If the fetch succeeds `Data` from salesforce is returned
   static func fetchData(config: SFConfig, auth: SFAuth, query: String, shouldRetry: Bool = true) async throws -> Data? {
     try await auth.refreshAccessTokenIfNeeded(config: config)
-
     let fetchUrl = try! URLBuilder.fetchDataURL(config: config, query: query)
     let requestConfig = RequestConfig(url: fetchUrl, params: nil, method: .get, bearerToken: auth.bearerToken)
     let request = URLRequestBuilder.request(with: requestConfig)
-
     let (data, statusCode) = try! await WebService.makeRequest(request, ignore401: true)
-
     if shouldRetry && statusCode == 401 {
-        try await auth.refreshAccessToken(config: config)
-        return try await fetchData(config: config, auth: auth, query: query, shouldRetry: true)
-
+      try await auth.refreshAccessToken(config: config)
+      return try await fetchData(config: config, auth: auth, query: query, shouldRetry: true)
     } else {
       return data
     }
   }
-
+  
   /// Updates the data using sObject Rows resource.
   /// - Parameters:
   ///     - config: The Salesforce instance’s configuration.
@@ -46,9 +42,7 @@ class WebService {
     shouldRetry: Bool = true
   ) async throws {
     try await auth.refreshAccessTokenIfNeeded(config: config)
-
     let jsonData = try? JSONSerialization.data(withJSONObject: fieldUpdates, options: .prettyPrinted)
-
     let fetchUrl = try! URLBuilder.updateDataURL(config: config, objectName: objectName, id: id)
     let requestConfig = RequestConfig(url: fetchUrl,
                                       params: jsonData,
@@ -56,41 +50,44 @@ class WebService {
                                       contentType: .json,
                                       bearerToken: auth.bearerToken)
     let request = URLRequestBuilder.request(with: requestConfig)
-
-
     let (_, statusCode) = try! await WebService.makeRequest(request, ignore401: true)
-
+    
     if statusCode == 401 && shouldRetry {
-        try await auth.refreshAccessToken(config: config)
-        try await updateRecord(
-          config: config,
-          auth: auth,
-          id: id,
-          objectName: objectName,
-          fieldUpdates: fieldUpdates,
-          shouldRetry: true // retry only once
-        )
+      try await auth.refreshAccessToken(config: config)
+      try await updateRecord(
+        config: config,
+        auth: auth,
+        id: id,
+        objectName: objectName,
+        fieldUpdates: fieldUpdates,
+        shouldRetry: true // retry only once
+      )
     } else {
       return
     }
   }
   
   // MARK: - Utilities
-
+  
   static func makeRequest(_ request: URLRequest, ignore401: Bool = false) async throws -> (Data, Int) {
     let (data, response) = try! await URLSession.shared.data(for: request)
     guard let httpResponse = response as? HTTPURLResponse else {
       throw SSSDKError.notOk
     }
-
+    
     let statusCode = httpResponse.statusCode
     guard statusCode >= 200 && statusCode < 299 || (ignore401 && statusCode == 401) else {
-      if let jsonString = String(data: data, encoding: .utf8) {
-        print(jsonString)
+      let decoder = JSONDecoder()
+      let response = try! decoder.decode(ResponseError.self, from: data)
+      if response.error == "invalid_grant" &&
+          response.errorDescription == "expired access/refresh token" {
+        SFAuth().reset()
+        throw SSSDKError.authRefreshTokenExpiredError
       }
+      
       throw SSSDKError.notOk
     }
-
+    
     return (data, statusCode)
   }
 }

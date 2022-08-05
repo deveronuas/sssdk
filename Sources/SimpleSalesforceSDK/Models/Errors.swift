@@ -6,6 +6,7 @@ public enum SSSDKError: Error {
   case authNoAccessTokenError
   case authNoRefreshTokenError
   case authRefreshFailedError
+  case authRefreshTokenExpiredError
   case authIntrospectFailedError
   case notOk
   case noData
@@ -23,6 +24,8 @@ extension SSSDKError: CustomStringConvertible {
         return "Missing access token, try refreshing the access token, try login again."
       case .authNoRefreshTokenError:
         return "Missing refresh token, try login again."
+      case .authRefreshTokenExpiredError:
+        return "Refresh Access token expired, try login again."
       case .authRefreshFailedError:
         return "Refreshing access token failed, try login again."
       case .authIntrospectFailedError:
@@ -54,6 +57,8 @@ extension SSSDKError: LocalizedError {
         return NSLocalizedString(self.description, comment: "Refresh Failure")
       case .authIntrospectFailedError:
         return NSLocalizedString(self.description, comment: "Introspect Failure")
+      case .authRefreshTokenExpiredError:
+        return NSLocalizedString(self.description, comment: "Refresh Access Token Expired")
       case .notOk:
         return NSLocalizedString(self.description, comment: "Non 200 Server Response")
       case .noData:
@@ -65,5 +70,15 @@ extension SSSDKError: LocalizedError {
       case .unknown(let desc):
         return NSLocalizedString(desc, comment: "Unexpected Error")
     }
+  }
+}
+
+struct ResponseError: Decodable {
+  var error: String
+  var errorDescription: String
+
+  enum CodingKeys: String, CodingKey {
+    case error
+    case errorDescription = "error_description"
   }
 }
