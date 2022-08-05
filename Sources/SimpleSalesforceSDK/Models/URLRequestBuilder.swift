@@ -26,6 +26,7 @@ public struct RequestConfig {
 }
 
 public struct URLRequestBuilder {
+  
   ///  Builds requests based on provided config
   /// - Parameters:
   ///     - config: Configuration for the request.
@@ -45,4 +46,5 @@ public struct URLRequestBuilder {
     }
     return request
   }
+
 }
