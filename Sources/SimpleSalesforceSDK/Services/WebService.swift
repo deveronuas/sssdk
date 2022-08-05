@@ -4,6 +4,7 @@ import Foundation
 /// For more information read
 /// [Salesforce article on OAuth 2.0 flow](https://help.salesforce.com/s/articleView?id=sf.remoteaccess_oauth_flows.htm&type=5)
 class WebService {
+  
   /// Requests the data using SOQL Query from the salesforce
   /// - Parameters:
   ///     - config: The Salesforce instance’s configuration.
@@ -12,18 +13,16 @@ class WebService {
   ///     - shouldRetry: If true, the request will be retried on a 401 auth error from Salesforce after attemting a refresh of access token
   /// - Returns: If the fetch succeeds `Data` from salesforce is returned
   static func fetchData(config: SFConfig, auth: SFAuth, query: String, shouldRetry: Bool = true) async throws -> Data? {
-    try! await auth.refreshAccessTokenIfNeeded(config: config)
+    try await auth.refreshAccessTokenIfNeeded(config: config)
 
-    let fetchUrl = try! URLBuilder.fetchDataURL(config: config, query: query)
+    let fetchUrl = try URLBuilder.fetchDataURL(config: config, query: query)
     let requestConfig = RequestConfig(url: fetchUrl, params: nil, method: .get, bearerToken: auth.bearerToken)
     let request = URLRequestBuilder.request(with: requestConfig)
 
-    let (data, statusCode) = try! await WebService.makeRequest(request, ignore401: true)
-
+    let (data, statusCode) = try await WebService.makeRequest(request, ignore401: true)
     if shouldRetry && statusCode == 401 {
-      try! await auth.refreshAccessToken(config: config)
-
-      return try! await fetchData(config: config, auth: auth, query: query, shouldRetry: false)
+      try await auth.refreshAccessToken(config: config)
+      return try await fetchData(config: config, auth: auth, query: query, shouldRetry: false)
     } else {
       return data
     }
@@ -45,11 +44,10 @@ class WebService {
     fieldUpdates: [String: Any],
     shouldRetry: Bool = true
   ) async throws {
-    try! await auth.refreshAccessTokenIfNeeded(config: config)
+    try await auth.refreshAccessTokenIfNeeded(config: config)
 
-    let jsonData = try? JSONSerialization.data(withJSONObject: fieldUpdates, options: .prettyPrinted)
-
-    let fetchUrl = try! URLBuilder.updateDataURL(config: config, objectName: objectName, id: id)
+    let jsonData = try JSONSerialization.data(withJSONObject: fieldUpdates, options: .prettyPrinted)
+    let fetchUrl = try URLBuilder.updateDataURL(config: config, objectName: objectName, id: id)
     let requestConfig = RequestConfig(url: fetchUrl,
                                       params: jsonData,
                                       method: .patch,
@@ -57,13 +55,10 @@ class WebService {
                                       bearerToken: auth.bearerToken)
     let request = URLRequestBuilder.request(with: requestConfig)
 
-
-    let (_, statusCode) = try! await WebService.makeRequest(request, ignore401: true)
-
+    let (_, statusCode) = try await WebService.makeRequest(request, ignore401: true)
     if statusCode == 401 && shouldRetry {
-      try! await auth.refreshAccessToken(config: config)
-
-      try! await updateRecord(
+      try await auth.refreshAccessToken(config: config)
+      try await updateRecord(
         config: config,
         auth: auth,
         id: id,
@@ -79,19 +74,24 @@ class WebService {
   // MARK: - Utilities
 
   static func makeRequest(_ request: URLRequest, ignore401: Bool = false) async throws -> (Data, Int) {
-    let (data, response) = try! await URLSession.shared.data(for: request)
+    let (data, response) = try await URLSession.shared.data(for: request)
+
     guard let httpResponse = response as? HTTPURLResponse else {
-      throw SSSDKError.notOk
+      throw SSSDKError.notOk(desc: "no response")
     }
 
     let statusCode = httpResponse.statusCode
     guard statusCode >= 200 && statusCode < 299 || (ignore401 && statusCode == 401) else {
-      if let jsonString = String(data: data, encoding: .utf8) {
-        print(jsonString)
+      let decoder = JSONDecoder()
+      let response = try decoder.decode(ResponseError.self, from: data)
+      if response.error == "invalid_grant" &&
+          response.errorDescription == "expired access/refresh token" {
+        SFAuth().reset()
+        throw SSSDKError.authRefreshTokenExpiredError
       }
-      throw SSSDKError.notOk
+      throw SSSDKError.notOk(desc: String(decoding: data, as: UTF8.self))
     }
-
+    
     return (data, statusCode)
   }
 }

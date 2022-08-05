@@ -50,17 +50,17 @@ class SFAuth {
   func reset() {
     KeychainService.clearAll()
   }
-  
+
   /// Fetches a new access token only if it is already expired and stores it to Keychain
   /// - Parameters:
   ///     - config: The Salesforce instance’s configuration.
   /// This will also call `interospectAccessToken` to reset the expiry
   func refreshAccessTokenIfNeeded(config: SFConfig) async throws {
     guard !self.isAccessTokenValid else { return }
-    
-    try! await self.refreshAccessToken(config: config)
+
+    try await self.refreshAccessToken(config: config)
   }
-  
+
   /// Fetches a new access token and stores it to Keychain
   /// - Parameters:
   ///     - config: The Salesforce instance’s configuration.
@@ -69,32 +69,32 @@ class SFAuth {
     guard let refreshToken = self.refreshToken else {
       throw SSSDKError.authNoRefreshTokenError
     }
-    
+
     let params: String = "grant_type=refresh_token" +
     "&client_id=\(config.clientId)" +
     "&refresh_token=\(refreshToken)" +
     "&client_secret=\(config.clientSecret)"
 
-    let url = try! URLBuilder.refreshTokenURL(urlString: config.host)
+    let url = try URLBuilder.refreshTokenURL(urlString: config.host)
     let requestConfig = RequestConfig(url: url, params: params.data(using: .utf8))
     let request = URLRequestBuilder.request(with: requestConfig)
+    let (data, _) = try await WebService.makeRequest(request)
 
-    let (data, _) = try! await WebService.makeRequest(request)
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .secondsSince1970
-    let responseData = try! decoder.decode(RefreshTokenResponse.self, from: data)
+    let responseData = try decoder.decode(RefreshTokenResponse.self, from: data)
 
     self.accessToken = responseData.accessToken
-    try! await self.interospectAccessToken(config: config)
+    try await self.interospectAccessToken(config: config)
   }
-  
+
   ///  To check the current state of an OAuth 2.0 access token and store expiry it to Keychain
   /// - Parameters:
   ///     - config: The Salesforce instance’s configuration.
   /// This method fetches the meta information, from salesforce, surrounding the access token.
   /// Including whether this token is currently active, expiry, originally issued
   func interospectAccessToken(config: SFConfig) async throws {
-    let url = try! URLBuilder.introspectURL(urlString: config.host)
+    let url = try URLBuilder.introspectURL(urlString: config.host)
 
     let params = "token=\(self.accessToken!)" +
     "&client_id=\(config.clientId)" +
@@ -103,10 +103,9 @@ class SFAuth {
 
     let requestConfig = RequestConfig(url: url, params: params.data(using: .utf8))
     let request = URLRequestBuilder.request(with: requestConfig)
-    
-    let (data, _) = try! await WebService.makeRequest(request)
-    let responseData = try! JSONDecoder().decode(IntrospectResponse.self, from: data)
-    
+    let (data, _) = try await WebService.makeRequest(request)
+
+    let responseData = try JSONDecoder().decode(IntrospectResponse.self, from: data)
     let expiryDate = Date(timeIntervalSince1970: TimeInterval(responseData.accessTokenExpiryDate))
     self.accessTokenExpiryDate = expiryDate
   }
@@ -117,12 +116,11 @@ class SFAuth {
   ///
   /// This method requests salesforce to invalidate and revoke the access token.
   func revokeAccessToken(config: SFConfig) async throws {
-    let url = try! URLBuilder.revokeTokenURL(urlString: config.host)
-
+    let url = try URLBuilder.revokeTokenURL(urlString: config.host)
     let params = "token=\(self.accessToken!)"
     let requestConfig = RequestConfig(url: url, params: params.data(using: .utf8))
     let request = URLRequestBuilder.request(with: requestConfig)
-
-    let _ = try! await WebService.makeRequest(request)
+    
+    let _ = try await WebService.makeRequest(request)
   }
 }

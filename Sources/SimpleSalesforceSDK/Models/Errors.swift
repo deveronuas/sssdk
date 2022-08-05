@@ -6,8 +6,9 @@ public enum SSSDKError: Error {
   case authNoAccessTokenError
   case authNoRefreshTokenError
   case authRefreshFailedError
+  case authRefreshTokenExpiredError
   case authIntrospectFailedError
-  case notOk
+  case notOk(desc: String)
   case noData
   case updateFailed(jsonData: String)
   case invalidUrlError(url: String)
@@ -23,12 +24,14 @@ extension SSSDKError: CustomStringConvertible {
         return "Missing access token, try refreshing the access token, try login again."
       case .authNoRefreshTokenError:
         return "Missing refresh token, try login again."
+      case .authRefreshTokenExpiredError:
+        return "Refresh Access token expired, try login again."
       case .authRefreshFailedError:
         return "Refreshing access token failed, try login again."
       case .authIntrospectFailedError:
         return "Introspecting access token failed, try login again."
-      case .notOk:
-        return "Server response for this request is not HTTP 200."
+      case .notOk(let desc):
+        return "Server response for this request is not HTTP 200. Error: \(desc)"
       case .noData:
         return "Server responded without any data."
       case .updateFailed(let jsonData):
@@ -54,6 +57,8 @@ extension SSSDKError: LocalizedError {
         return NSLocalizedString(self.description, comment: "Refresh Failure")
       case .authIntrospectFailedError:
         return NSLocalizedString(self.description, comment: "Introspect Failure")
+      case .authRefreshTokenExpiredError:
+        return NSLocalizedString(self.description, comment: "Refresh Access Token Expired")
       case .notOk:
         return NSLocalizedString(self.description, comment: "Non 200 Server Response")
       case .noData:
@@ -65,5 +70,15 @@ extension SSSDKError: LocalizedError {
       case .unknown(let desc):
         return NSLocalizedString(desc, comment: "Unexpected Error")
     }
+  }
+}
+
+struct ResponseError: Decodable {
+  var error: String
+  var errorDescription: String
+
+  enum CodingKeys: String, CodingKey {
+    case error
+    case errorDescription = "error_description"
   }
 }

@@ -45,6 +45,7 @@ public struct URLBuilder {
     }
     return introspectUrl
   }
+
   ///  Creates URL for refresh access token api
   /// - Parameters:
   ///     - urlString: The Salesforce instance’s endpoint (or that of the experience cloud community).
@@ -58,6 +59,7 @@ public struct URLBuilder {
     }
     return refreshToneUrl
   }
+
   ///  Creates URL for revoke access token api
   /// - Parameters:
   ///     - urlString: The Salesforce instance’s endpoint (or that of the experience cloud community).
@@ -71,6 +73,7 @@ public struct URLBuilder {
     }
     return revokeTokenUrl
   }
+
   ///  Creates URL for fetchData api
   /// - Parameters:
   ///     - config: The Salesforce instance’s configuration.
@@ -89,6 +92,7 @@ public struct URLBuilder {
     }
     return fetchUrl
   }
+
   ///  Creates URL for updateData api
   /// - Parameters:
   ///     - config: The Salesforce instance’s configuration.
@@ -107,4 +111,5 @@ public struct URLBuilder {
     }
     return updateUrl
   }
+  
 }
