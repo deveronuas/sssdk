@@ -8,7 +8,7 @@ public enum SSSDKError: Error {
   case authRefreshFailedError
   case authRefreshTokenExpiredError
   case authIntrospectFailedError
-  case notOk
+  case notOk(desc: String)
   case noData
   case updateFailed(jsonData: String)
   case invalidUrlError(url: String)
@@ -30,8 +30,8 @@ extension SSSDKError: CustomStringConvertible {
         return "Refreshing access token failed, try login again."
       case .authIntrospectFailedError:
         return "Introspecting access token failed, try login again."
-      case .notOk:
-        return "Server response for this request is not HTTP 200."
+      case .notOk(let desc):
+        return "Server response for this request is not HTTP 200. Error: \(desc)"
       case .noData:
         return "Server responded without any data."
       case .updateFailed(let jsonData):

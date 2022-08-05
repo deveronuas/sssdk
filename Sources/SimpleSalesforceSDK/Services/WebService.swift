@@ -77,7 +77,7 @@ class WebService {
     let (data, response) = try await URLSession.shared.data(for: request)
 
     guard let httpResponse = response as? HTTPURLResponse else {
-      throw SSSDKError.notOk
+      throw SSSDKError.notOk(desc: "no response")
     }
 
     let statusCode = httpResponse.statusCode
@@ -89,7 +89,7 @@ class WebService {
         SFAuth().reset()
         throw SSSDKError.authRefreshTokenExpiredError
       }
-      throw SSSDKError.notOk
+      throw SSSDKError.notOk(desc: String(decoding: data, as: UTF8.self))
     }
     
     return (data, statusCode)
