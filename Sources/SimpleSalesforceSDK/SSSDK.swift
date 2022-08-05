@@ -10,19 +10,13 @@ import SwiftUI
 ///
 /// Once authenticated, you can also use this class to make API calls to Salesforce.
 public class SSSDK {
-  
   /// SSSDK is a singleton, use this variable to access it's methods
   public static let shared = SSSDK()
-  
   // MARK: Representation Properties
-  
   private var config: SFConfig?
   private var auth: SFAuth = SFAuth()
-  
   private init() {}
-  
   // MARK: - Configuration
-  
   /// Configure the SDK, these values are stored in memory
   /// - Parameters:
   ///     - host: The Salesforce instance’s endpoint (or that of the experience cloud community)
@@ -48,20 +42,15 @@ public class SSSDK {
       clientSecret: clientSecret
     )
   }
-  
   // MARK: - Auth
-  
   /// Use this method to show a login flow
   /// - Returns: A LoginView SwiftUI view object with the configured host and redirectUri
   /// - Throws: `ConfigurationError.runtimeError` if the singleton is missing the required configuration
   public func loginView() throws -> some View {
     let config = try! fetchValidConfig()
-    
     let url = try! URLBuilder.redirectURL(config: config)
-    
     return LoginView(url: url)
   }
-  
   /// This method should be called within your app's handler for the auth redirect URI.
   /// It will extract the `access_token` and `refresh_token`, by parsing the supplied URL.
   /// Then save them to keychain.
@@ -74,38 +63,31 @@ public class SSSDK {
   /// observables to propagate and react to that changes accordingly.
   public func handleAuthRedirect(urlReceived: URL) async throws {
     let config = try! fetchValidConfig()
-    
     let url = urlReceived.absoluteString
     var urlComponents: URLComponents? = URLComponents(string: url)
-    
     if let fragment = urlComponents?.fragment {
       urlComponents?.query = fragment
       if let queryItems = urlComponents?.queryItems {
         let temp = queryItems.reduce(into: [String: String]()) { (result, item) in
           result[item.name] = item.value
         }
-        
         self.auth.accessToken = (temp["access_token"] ?? "") as String
         self.auth.refreshToken = ((temp["refresh_token"] ?? "") as String)
         try! await self.auth.interospectAccessToken(config: config)
       }
     }
   }
-  
   /// This method can be called at anytime to refresh the OAuth access token from the server.
   /// It will extract the new `access_token` and store it in memory for use with API calls
   /// - Throws: `SSSDKError` errors
   public func refershAccessToken() async throws {
     let config = try! fetchValidConfig()
-    
     try await self.auth.refreshAccessToken(config: config)
   }
-  
   /// - Returns: This method returns true if the access token and refresh token are saved in the keychain
   public func isAuthenticated() -> Bool {
     return self.auth.isAuthenticated
   }
-  
   /// Revokes the access token from salesforce and erases all tokens and expiry date from keychain
   /// - Throws: `SSSDKError` errors
   public func logout() async throws {
@@ -113,9 +95,7 @@ public class SSSDK {
     try await self.auth.revokeAccessToken(config: config)
     self.auth.reset()
   }
-  
   // MARK: - Data
-  
   /// Fetches data using SOQL query
   /// - Parameters:
   ///     - query: SOQL query to fetch the data.
@@ -125,7 +105,6 @@ public class SSSDK {
     let config = try! fetchValidConfig()
     return try await WebService.fetchData(config: config, auth: self.auth, query: query)
   }
-  
   /// Updates salesforce record using sObject
   /// - Parameters:
   ///     - objectName: Object name to update record.
@@ -142,14 +121,11 @@ public class SSSDK {
       fieldUpdates: fieldUpdates
     )
   }
-  
   // MARK: - Utilities
-  
   private func fetchValidConfig() throws -> SFConfig {
     guard let config = self.config, config.isValid else {
       throw SSSDKError.invalidConfigurationError
     }
-    
     return config
   }
 }

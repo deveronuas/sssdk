@@ -24,7 +24,6 @@ class WebService {
       return data
     }
   }
-  
   /// Updates the data using sObject Rows resource.
   /// - Parameters:
   ///     - config: The Salesforce instance’s configuration.
@@ -66,15 +65,12 @@ class WebService {
       return
     }
   }
-  
   // MARK: - Utilities
-  
   static func makeRequest(_ request: URLRequest, ignore401: Bool = false) async throws -> (Data, Int) {
     let (data, response) = try! await URLSession.shared.data(for: request)
     guard let httpResponse = response as? HTTPURLResponse else {
       throw SSSDKError.notOk
     }
-    
     let statusCode = httpResponse.statusCode
     guard statusCode >= 200 && statusCode < 299 || (ignore401 && statusCode == 401) else {
       let decoder = JSONDecoder()
@@ -84,7 +80,6 @@ class WebService {
         SFAuth().reset()
         throw SSSDKError.authRefreshTokenExpiredError
       }
-      
       throw SSSDKError.notOk
     }
     
