@@ -76,6 +76,9 @@ extension SSSDKError: LocalizedError {
 struct ResponseError: Decodable {
   var error: String
   var errorDescription: String
+  var message: String?
+  var errorCode: String?
+  var fields: [String?]
 
   enum CodingKeys: String, CodingKey {
     case error
