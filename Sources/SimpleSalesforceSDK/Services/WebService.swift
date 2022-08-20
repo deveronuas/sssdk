@@ -93,6 +93,7 @@ class WebService {
       } catch {
         let response = try decoder.decode([SalesforceError].self, from: data)
         print(response)
+        throw SSSDKError.duplicateValueError(desc: response)
       }
       throw SSSDKError.notOk(desc: String(decoding: data, as: UTF8.self))
     }
