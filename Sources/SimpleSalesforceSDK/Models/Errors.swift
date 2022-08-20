@@ -12,7 +12,7 @@ public enum SSSDKError: Error {
   case noData
   case updateFailed(jsonData: String)
   case invalidUrlError(url: String)
-  case duplicateValueError(desc: [SalesforceError])
+  case duplicateValueError(desc: Data)
   case unknown(desc: String)
 }
 
@@ -40,7 +40,7 @@ extension SSSDKError: CustomStringConvertible {
       case .invalidUrlError(let url):
         return "The provided URL (\(url)) is invalid"
       case .duplicateValueError(let desc):
-        return "\(desc.description)"
+        return "\(String(decoding: desc, as: UTF8.self))"
       case .unknown(let desc):
         return desc
     }
@@ -87,10 +87,4 @@ struct ResponseError: Decodable {
     case error
     case errorDescription = "error_description"
   }
-}
-
-public struct SalesforceError: Decodable {
-  var message: String
-  var errorCode: String
-  var fields: [String]
 }
