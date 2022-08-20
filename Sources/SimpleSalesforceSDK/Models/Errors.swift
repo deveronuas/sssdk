@@ -39,7 +39,7 @@ extension SSSDKError: CustomStringConvertible {
         return "Updating data on the server failed. Error: \(jsonData)"
       case .invalidUrlError(let url):
         return "The provided URL (\(url)) is invalid"
-      case .duplicateValueError(let desc)
+      case .duplicateValueError(let desc):
         return "\(desc.description)"
       case .unknown(let desc):
         return desc
@@ -89,7 +89,7 @@ struct ResponseError: Decodable {
   }
 }
 
-struct SalesforceError: Decodable {
+public struct SalesforceError: Decodable {
   var message: String
   var errorCode: String
   var fields: [String]
