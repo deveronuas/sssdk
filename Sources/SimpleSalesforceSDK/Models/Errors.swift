@@ -12,7 +12,6 @@ public enum SSSDKError: Error {
   case noData
   case updateFailed(jsonData: String)
   case invalidUrlError(url: String)
-  case duplicateValueError(desc: Data)
   case unknown(desc: String)
 }
 
@@ -39,8 +38,6 @@ extension SSSDKError: CustomStringConvertible {
         return "Updating data on the server failed. Error: \(jsonData)"
       case .invalidUrlError(let url):
         return "The provided URL (\(url)) is invalid"
-      case .duplicateValueError(let desc):
-        return "\(String(decoding: desc, as: UTF8.self))"
       case .unknown(let desc):
         return desc
     }
@@ -70,8 +67,6 @@ extension SSSDKError: LocalizedError {
         return NSLocalizedString(self.description, comment: "Update Data Failure")
       case .invalidUrlError:
         return NSLocalizedString(self.description, comment: "Invalid url")
-      case .duplicateValueError:
-        return NSLocalizedString(self.description, comment: "Duplicate value error")
       case .unknown(let desc):
         return NSLocalizedString(desc, comment: "Unexpected Error")
     }
