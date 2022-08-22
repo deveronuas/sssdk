@@ -83,11 +83,13 @@ class WebService {
     let statusCode = httpResponse.statusCode
     guard statusCode >= 200 && statusCode < 299 || (ignore401 && statusCode == 401) else {
       let decoder = JSONDecoder()
-      let response = try decoder.decode(ResponseError.self, from: data)
-      if response.error == "invalid_grant" &&
-          response.errorDescription == "expired access/refresh token" {
-        SFAuth().reset()
-        throw SSSDKError.authRefreshTokenExpiredError
+      if statusCode == 401 {
+        let response = try decoder.decode(ResponseError.self, from: data)
+        if response.error == "invalid_grant" &&
+            response.errorDescription == "expired access/refresh token" {
+          SFAuth().reset()
+          throw SSSDKError.authRefreshTokenExpiredError
+        }
       }
       throw SSSDKError.notOk(desc: String(decoding: data, as: UTF8.self))
     }
