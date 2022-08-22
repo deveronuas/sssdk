@@ -77,7 +77,6 @@ struct ResponseError: Decodable {
   var error: String
   var errorDescription: String
 
-
   enum CodingKeys: String, CodingKey {
     case error
     case errorDescription = "error_description"
