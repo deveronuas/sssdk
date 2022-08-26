@@ -86,10 +86,8 @@ class SFAuth {
 
       self.accessToken = responseData.accessToken
       try await self.interospectAccessToken(config: config)
-    } catch {
-      print("Error while refreshing the access token")
-      print(String(describing: error))
-      throw SSSDKError.authRefreshFailedError
+    } catch SSSDKError.authRefreshTokenExpiredError {
+      throw SSSDKError.authRefreshTokenExpiredError
     }
   }
 
@@ -114,7 +112,7 @@ class SFAuth {
     let expiryDate = Date(timeIntervalSince1970: TimeInterval(responseData.accessTokenExpiryDate))
     self.accessTokenExpiryDate = expiryDate
   }
-
+  
   /// Revokes the salesforce access token.
   /// - Parameters:
   ///     - config: The Salesforce instance’s configuration.
