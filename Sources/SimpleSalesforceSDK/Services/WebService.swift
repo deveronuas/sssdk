@@ -85,10 +85,12 @@ class WebService {
       if let updateFailedResponse =
           decodeError(data: data, type: [UpdateFailedError].self) {
 
+        print(updateFailedResponse)
         throw SSSDKError.updateFailed(jsonData: String(decoding: data, as: UTF8.self))
-      } else if let refreshTokenFailedResponse =
+      } else if let authRefreshTokenExpiredResponse =
                   decodeError(data: data, type: ResponseError.self) {
-        
+
+        print(authRefreshTokenExpiredResponse)
         throw SSSDKError.authRefreshTokenExpiredError
       }
 

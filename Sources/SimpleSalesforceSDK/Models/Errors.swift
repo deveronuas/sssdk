@@ -1,7 +1,7 @@
 import Foundation
 
 /// Custom errors. Raised for various error conditions
-public enum SSSDKError: Error, Equatable {
+public enum SSSDKError: Error {
   case invalidConfigurationError
   case authNoAccessTokenError
   case authNoRefreshTokenError
