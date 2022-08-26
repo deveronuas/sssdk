@@ -1,7 +1,7 @@
 import Foundation
 
 /// Custom errors. Raised for various error conditions
-public enum SSSDKError: Error {
+public enum SSSDKError: Error, Equatable {
   case invalidConfigurationError
   case authNoAccessTokenError
   case authNoRefreshTokenError
@@ -81,4 +81,10 @@ struct ResponseError: Decodable {
     case error
     case errorDescription = "error_description"
   }
+}
+
+struct UpdateFailedError: Decodable {
+  var message: String
+  var errorCode: String
+  var fields: [String]?
 }
