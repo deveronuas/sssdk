@@ -85,7 +85,7 @@ class WebService {
       if let updateFailedResponse =
           decodeError(data: data, type: [UpdateFailedError].self) {
 
-        throw SSSDKError.updateFailed(jsonData: updateFailedResponse.description)
+        throw SSSDKError.updateFailed(jsonData: String(decoding: data, as: UTF8.self))
       } else if let refreshTokenFailedResponse =
                   decodeError(data: data, type: ResponseError.self) {
         
@@ -104,6 +104,7 @@ class WebService {
       let response = try decoder.decode(type.self, from: data)
       return response
     } catch {
+      print("\(type)")
       print("error while decoding the data")
       return nil
     }
