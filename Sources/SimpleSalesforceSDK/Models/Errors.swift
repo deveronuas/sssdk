@@ -82,3 +82,9 @@ struct ResponseError: Decodable {
     case errorDescription = "error_description"
   }
 }
+
+struct UpdateFailedError: Decodable {
+  var message: String
+  var errorCode: String
+  var fields: [String]?
+}

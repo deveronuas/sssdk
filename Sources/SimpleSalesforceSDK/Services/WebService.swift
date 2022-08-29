@@ -82,18 +82,34 @@ class WebService {
 
     let statusCode = httpResponse.statusCode
     guard statusCode >= 200 && statusCode < 299 || (ignore401 && statusCode == 401) else {
-      let decoder = JSONDecoder()
-      if statusCode == 401 {
-        let response = try decoder.decode(ResponseError.self, from: data)
-        if response.error == "invalid_grant" &&
-            response.errorDescription == "expired access/refresh token" {
-          SFAuth().reset()
-          throw SSSDKError.authRefreshTokenExpiredError
-        }
+      if let updateFailedResponse =
+          decodeError(data: data, type: [UpdateFailedError].self) {
+
+        print(updateFailedResponse)
+        throw SSSDKError.updateFailed(jsonData: String(decoding: data, as: UTF8.self))
+      } else if let authRefreshTokenExpiredResponse =
+                  decodeError(data: data, type: ResponseError.self) {
+
+        print(authRefreshTokenExpiredResponse)
+        throw SSSDKError.authRefreshTokenExpiredError
       }
+
       throw SSSDKError.notOk(desc: String(decoding: data, as: UTF8.self))
     }
     
     return (data, statusCode)
   }
+
+  static func decodeError <T: Decodable> (data: Data, type: T.Type) -> T? {
+    let decoder = JSONDecoder()
+    do {
+      let response = try decoder.decode(type.self, from: data)
+      return response
+    } catch {
+      print("\(type)")
+      print("error while decoding the data")
+      return nil
+    }
+  }
+
 }
