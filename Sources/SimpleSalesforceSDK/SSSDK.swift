@@ -135,9 +135,9 @@ public class SSSDK {
 
   /// Updates salesforce record using sObject
   /// - Parameters:
-  ///     - objectName: Object name to update record.
-  ///     - objectId: Record id to update record.
-  ///     - fieldUpdates: Update record data.
+  ///     - objectName: Name of the object to update the record in.
+  ///     - objectId: ID of the record to update.
+  ///     - fieldUpdates: Data to update the record with.
   /// - Throws: `SSSDKError` errors
   public func update(objectName: String, objectId: String, with fieldUpdates: [String:Any]) async throws {
     let config = try fetchValidConfig()
@@ -151,8 +151,24 @@ public class SSSDK {
     )
   }
 
+  /// Updates salesforce record using sObject
+  /// - Parameters:
+  ///     - objectName: Name of the object to insert record into.
+  ///     - fieldUpdates:  Data for the inserted record.
+  /// - Throws: `SSSDKError` errors
+  /// - Returns: `Data` results of the query returned by the salesforce server
+  public func insert(objectName: String, with fieldUpdates: [String:Any]) async throws -> Data?{
+    let config = try fetchValidConfig()
+
+    return try await WebService.insertRecord(
+      config: config,
+      auth: self.auth,
+      objectName: objectName,
+      fieldUpdates: fieldUpdates
+    )
+  }
+
   // MARK: - Utilities
-  
   private func fetchValidConfig() throws -> SFConfig {
     guard let config = self.config, config.isValid else {
       throw SSSDKError.invalidConfigurationError

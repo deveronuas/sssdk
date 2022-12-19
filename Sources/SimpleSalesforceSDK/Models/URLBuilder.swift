@@ -102,7 +102,7 @@ public struct URLBuilder {
   /// - Returns: returns URL for updateData api.
   public static func updateDataURL(config: SFConfig,
                                    objectName: String,
-                                   id: String) throws -> URL{
+                                   id: String) throws -> URL {
     let host = verifyHost(host: config.host)
     let url = "\(host)services/data/v54.0/sobjects/\(objectName)/\(id)"
     guard let updateUrl = URL(string: "\(url)")
@@ -111,5 +111,21 @@ public struct URLBuilder {
     }
     return updateUrl
   }
-  
+
+  ///  Creates URL for insertData api
+  /// - Parameters:
+  ///     - config: The Salesforce instance’s configuration.
+  ///     - objectName: Object name to insert record.
+  /// - Throws: `SSSDKError.invalidUrlError` if the provided host url is invalid
+  /// - Returns: returns URL for insertData api.
+  public static func insertDataURL(config: SFConfig,
+                                   objectName: String) throws -> URL {
+    let host = verifyHost(host: config.host)
+    let url = "\(host)services/data/v54.0/sobjects/\(objectName)"
+    guard let updateUrl = URL(string: "\(url)")
+    else {
+      throw SSSDKError.invalidUrlError(url: host)
+    }
+    return updateUrl
+  }
 }
