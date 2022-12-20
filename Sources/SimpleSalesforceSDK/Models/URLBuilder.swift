@@ -122,10 +122,10 @@ public struct URLBuilder {
                                    objectName: String) throws -> URL {
     let host = verifyHost(host: config.host)
     let url = "\(host)services/data/v54.0/sobjects/\(objectName)"
-    guard let updateUrl = URL(string: "\(url)")
+    guard let insertUrl = URL(string: "\(url)")
     else {
       throw SSSDKError.invalidUrlError(url: host)
     }
-    return updateUrl
+    return insertUrl
   }
 }
