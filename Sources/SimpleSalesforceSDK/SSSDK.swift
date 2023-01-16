@@ -151,7 +151,31 @@ public class SSSDK {
     )
   }
 
-  /// Updates salesforce record using sObject
+  /// Create record or update existing record (upsert) based on the value of a specified external ID field.
+  /// - Parameters:
+  ///   - objectName: Name of the object to upsert record into.
+  ///   - fieldUpdates: Data for the upserted record.
+  ///   - externalIdFieldName: Name of the external field id
+  ///   - externalIdFieldValue: Value of the external field id
+  /// - Throws: `SSSDKError` errors
+  /// - Returns: `Data` results of the query returned by the salesforce server
+  public func upsert(objectName: String,
+                     fieldUpdates: [String:Any],
+                     externalIdFieldName: String,
+                     externalIdFieldValue: String) async throws -> Data? {
+    let config = try fetchValidConfig()
+
+    return try await WebService.upsertRecord(
+      config: config,
+      auth: self.auth,
+      objectName: objectName,
+      externalIdFieldName: externalIdFieldName,
+      externalIdFieldValue: externalIdFieldValue,
+      fieldUpdates: fieldUpdates
+    )
+  }
+
+  /// Insert record using sObject
   /// - Parameters:
   ///     - objectName: Name of the object to insert record into.
   ///     - fieldUpdates:  Data for the inserted record.

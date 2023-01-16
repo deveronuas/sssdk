@@ -128,4 +128,25 @@ public struct URLBuilder {
     }
     return insertUrl
   }
+
+  ///  Creates URL for upsertData api
+  /// - Parameters:
+  ///     - config: The Salesforce instance’s configuration.
+  ///     - objectName: Name of the object to upsert record into.
+  ///     - externalIdFieldName: External field's name
+  ///     - externalIdFieldValue: External field's value
+  /// - Throws: `SSSDKError.invalidUrlError` if the provided host url is invalid
+  /// - Returns: returns URL for upsertData api.
+  public static func upsertDataURL(config: SFConfig,
+                                   objectName: String,
+                                   externalIdFieldName: String,
+                                   externalIdFieldValue: String) throws -> URL {
+    let host = verifyHost(host: config.host)
+    let url = "\(host)services/data/v54.0/sobjects/\(objectName)/\(externalIdFieldName)/\(externalIdFieldValue)"
+    guard let upsertUrl = URL(string: "\(url)")
+    else {
+      throw SSSDKError.invalidUrlError(url: host)
+    }
+    return upsertUrl
+  }
 }

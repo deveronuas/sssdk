@@ -20,7 +20,7 @@ public struct RequestConfig {
   }
   
   enum RequestContentType: String {
-    case json = "application/json"
+    case JSON = "application/json"
     case urlEncoded = "application/x-www-form-urlencoded"
   }
 }

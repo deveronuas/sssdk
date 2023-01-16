@@ -51,7 +51,7 @@ class WebService {
     let requestConfig = RequestConfig(url: fetchUrl,
                                       params: jsonData,
                                       method: .patch,
-                                      contentType: .json,
+                                      contentType: .JSON,
                                       bearerToken: auth.bearerToken)
     let request = URLRequestBuilder.request(with: requestConfig)
 
@@ -88,12 +88,12 @@ class WebService {
   ) async throws -> Data? {
     try await auth.refreshAccessTokenIfNeeded(config: config)
 
-    let jsonData = try JSONSerialization.data(withJSONObject: fieldUpdates, options: .prettyPrinted)
-    let fetchUrl = try URLBuilder.insertDataURL(config: config, objectName: objectName)
-    let requestConfig = RequestConfig(url: fetchUrl,
-                                      params: jsonData,
+    let JSONData = try JSONSerialization.data(withJSONObject: fieldUpdates, options: .prettyPrinted)
+    let insertDataUrl = try URLBuilder.insertDataURL(config: config, objectName: objectName)
+    let requestConfig = RequestConfig(url: insertDataUrl,
+                                      params: JSONData,
                                       method: .post,
-                                      contentType: .json,
+                                      contentType: .JSON,
                                       bearerToken: auth.bearerToken)
     let request = URLRequestBuilder.request(with: requestConfig)
 
@@ -104,6 +104,56 @@ class WebService {
         config: config,
         auth: auth,
         objectName: objectName,
+        fieldUpdates: fieldUpdates,
+        shouldRetry: false // retry only once
+      )
+    } else {
+      return data
+    }
+  }
+
+  /// Create record or update existing record (upsert) based on the value of a specified external ID field.
+  /// - Parameters:
+  ///   - config: Configuration for the Salesforce instance.
+  ///   - auth: Authentication for the Salesforce instance.
+  ///   - objectName: Name of the object to upsert record into.
+  ///   - externalIdFieldName: Name of the external field id
+  ///   - externalIdFieldValue: Value of the external field id
+  ///   - fieldUpdates: Data for the inserted record
+  ///   - shouldRetry: If true, the request will be retried on a 401 auth error from Salesforce after attempting to refresh the access token.
+  /// - Returns: If the upsert succeeds, returns the data from Salesforce.
+  static func upsertRecord(
+    config: SFConfig,
+    auth: SFAuth,
+    objectName: String,
+    externalIdFieldName: String,
+    externalIdFieldValue: String,
+    fieldUpdates: [String: Any],
+    shouldRetry: Bool = true
+  ) async throws -> Data? {
+    try await auth.refreshAccessTokenIfNeeded(config: config)
+
+    let JSONData = try JSONSerialization.data(withJSONObject: fieldUpdates, options: .prettyPrinted)
+    let upsertDataUrl = try URLBuilder.upsertDataURL(config: config,
+                                                objectName: objectName,
+                                                externalIdFieldName: externalIdFieldName,
+                                                externalIdFieldValue: externalIdFieldValue)
+    let requestConfig = RequestConfig(url: upsertDataUrl,
+                                      params: JSONData,
+                                      method: .patch,
+                                      contentType: .JSON,
+                                      bearerToken: auth.bearerToken)
+    let request = URLRequestBuilder.request(with: requestConfig)
+
+    let (data, statusCode) = try await WebService.makeRequest(request, ignore401: true)
+    if statusCode == 401 && shouldRetry {
+      try await auth.refreshAccessToken(config: config)
+      return try await upsertRecord(
+        config: config,
+        auth: auth,
+        objectName: objectName,
+        externalIdFieldName: externalIdFieldName,
+        externalIdFieldValue: externalIdFieldValue,
         fieldUpdates: fieldUpdates,
         shouldRetry: false // retry only once
       )
