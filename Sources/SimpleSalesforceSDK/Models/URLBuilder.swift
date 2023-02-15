@@ -84,7 +84,7 @@ public struct URLBuilder {
                                   query: String) throws -> URL {
     let host = verifyHost(host: config.host)
     var url = "\(host)services/data/v54.0/query/?q="
-    let queryPattern = "^SELECT\\s+(\\w+\\s*,\\s*)+\\w+\\s+FROM\\s+\\w+(\\s+WHERE\\s+.+)*$"
+    let queryPattern = "^SELECT\\s+(\\w+\\s*,\\s*)+\\w+\\s+FROM\\s+\\w+(\\s+WHERE\\s+.+)*\\s*(ORDER BY\\s+\\w+\\s+(ASC|DESC))?\\s*(LIMIT\\s+\\d+)?$"
     if query.range(of: queryPattern, options: .regularExpression) != nil {
       url = "\(host)services/data/v54.0/query/?q=" + query
         .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
