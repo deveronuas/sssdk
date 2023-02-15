@@ -14,7 +14,7 @@ class WebService {
   /// - Returns: If the fetch succeeds, returns the data from Salesforce.
   static func fetchData(config: SFConfig, auth: SFAuth,
                         query: String,
-                        isSOQlQuery: Bool = true,
+                        isSOQlQuery: Bool,
                         shouldRetry: Bool = true) async throws -> Data? {
     try await auth.refreshAccessTokenIfNeeded(config: config)
 

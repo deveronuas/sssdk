@@ -82,7 +82,7 @@ public struct URLBuilder {
   /// - Returns: returns URL for fetchData api.
   public static func fetchDataURL(config: SFConfig,
                                   query: String,
-                                  isSOQlQuery: Bool = true) throws -> URL {
+                                  isSOQlQuery: Bool) throws -> URL {
     let host = verifyHost(host: config.host)
     var url = ""
 
