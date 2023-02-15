@@ -12,7 +12,10 @@ class WebService {
   ///   - query: SOQL query to fetch the data.
   ///   - shouldRetry: If true, the request will be retried on a 401 auth error from Salesforce after attempting to refresh the access token.
   /// - Returns: If the fetch succeeds, returns the data from Salesforce.
-  static func fetchData(config: SFConfig, auth: SFAuth, query: String, shouldRetry: Bool = true) async throws -> Data? {
+  static func fetchData(config: SFConfig, auth: SFAuth,
+                        query: String,
+                        isSOQlQuery: Bool = true,
+                        shouldRetry: Bool = true) async throws -> Data? {
     try await auth.refreshAccessTokenIfNeeded(config: config)
 
     let fetchUrl = try URLBuilder.fetchDataURL(config: config, query: query)

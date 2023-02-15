@@ -127,10 +127,10 @@ public class SSSDK {
   ///     - query: SOQL query to fetch the data.
   /// - Throws: `SSSDKError` errors
   /// - Returns: `Data` results of the query returned by the salesforce server
-  public func fetchData(by query: String) async throws -> Data? {
+  public func fetchData(by query: String, isSOQlQuery: Bool = true) async throws -> Data? {
     let config = try fetchValidConfig()
 
-    return try await WebService.fetchData(config: config, auth: self.auth, query: query)
+    return try await WebService.fetchData(config: config, auth: self.auth, query: query, isSOQlQuery: isSOQlQuery)
   }
 
   /// Updates salesforce record using sObject

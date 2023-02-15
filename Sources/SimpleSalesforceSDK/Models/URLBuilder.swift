@@ -81,12 +81,12 @@ public struct URLBuilder {
   /// - Throws: `SSSDKError.invalidUrlError` if the provided host url is invalid
   /// - Returns: returns URL for fetchData api.
   public static func fetchDataURL(config: SFConfig,
-                                  query: String) throws -> URL {
+                                  query: String,
+                                  isSOQlQuery: Bool = true) throws -> URL {
     let host = verifyHost(host: config.host)
     var url = ""
-    let queryPattern = "^SELECT\\s+(\\w+\\s*,\\s*)+\\w+\\s+FROM\\s+\\w+(\\s+WHERE\\s+.+)*\\s*(ORDER BY\\s+\\w+\\s+(ASC|DESC))?\\s*(LIMIT\\s+\\d+)?$"
-    let queryIsValid = NSPredicate(format: "SELF MATCHES %@", queryPattern).evaluate(with: query)
-    if queryIsValid {
+
+    if isSOQlQuery {
       url = "\(host)services/data/v54.0/query/?q=" + query
         .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
     } else {
