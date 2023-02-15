@@ -98,13 +98,13 @@ public struct URLBuilder {
   ///     - nextRecordsUrl: SOQL query to fetch the data.
   /// - Throws: `SSSDKError.invalidUrlError` if the provided host url is invalid
   /// - Returns: returns URL for fetchData api.
-  public static func fetchDataURL(config: SFConfig,
+  public static func fetchNextRecordsURL(config: SFConfig,
                                   nextRecordsUrl: String) throws -> URL {
     let host = verifyHost(host: config.host)
     let url = "\(host)\(nextRecordsUrl)"
-    let fetchQuery = nextRecordsUrl.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+    let fetchQuery = url.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
 
-    guard let fetchUrl = URL(string: "\(url)\(fetchQuery)")
+    guard let fetchUrl = URL(string: "\(fetchQuery)")
     else {
       throw SSSDKError.invalidUrlError(url: host)
     }
