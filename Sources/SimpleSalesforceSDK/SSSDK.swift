@@ -125,13 +125,23 @@ public class SSSDK {
   /// Fetches data using SOQL query
   /// - Parameters:
   ///     - query: SOQL query to fetch the data.
-  ///     - isSOQL: If true, then it will add the query component in ?q= 
   /// - Throws: `SSSDKError` errors
   /// - Returns: `Data` results of the query returned by the salesforce server
-  public func fetchData(by query: String, isSOQlQuery: Bool) async throws -> Data? {
+  public func fetchData(by query: String) async throws -> Data? {
     let config = try fetchValidConfig()
 
-    return try await WebService.fetchData(config: config, auth: self.auth, query: query, isSOQlQuery: isSOQlQuery)
+    return try await WebService.fetchData(config: config, auth: self.auth, query: query)
+  }
+
+  /// Fetches data using nextRecordsUrl.
+  /// - Parameters:
+  ///     - nextRecordsUrl:  A string used to retrieve the next set of query results.
+  /// - Throws: `SSSDKError` errors
+  /// - Returns: `Data` results of the query returned by the salesforce server
+  public func fetchData(using nextRecordsUrl: String) async throws -> Data? {
+    let config = try fetchValidConfig()
+
+    return try await WebService.fetchData(config: config, auth: self.auth, nextRecordsUrl: nextRecordsUrl)
   }
 
   /// Updates salesforce record using sObject

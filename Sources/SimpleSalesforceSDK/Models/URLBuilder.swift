@@ -74,27 +74,37 @@ public struct URLBuilder {
     return revokeTokenUrl
   }
 
-  ///  Creates URL for fetchData api
+  ///  Creates URL for fetchData api for SOQL query
   /// - Parameters:
   ///     - config: The Salesforce instance’s configuration.
   ///     - query: SOQL query to fetch the data.
-  ///     - isSOQL: If true, then it will add the query component in ?q= 
   /// - Throws: `SSSDKError.invalidUrlError` if the provided host url is invalid
   /// - Returns: returns URL for fetchData api.
   public static func fetchDataURL(config: SFConfig,
-                                  query: String,
-                                  isSOQlQuery: Bool) throws -> URL {
+                                  query: String) throws -> URL {
     let host = verifyHost(host: config.host)
-    var url = ""
+    let url = "\(host)services/data/v54.0/query/?q="
+    let fetchQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
 
-    if isSOQlQuery {
-      url = "\(host)services/data/v54.0/query/?q=" + query
-        .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-    } else {
-      url = "\(host)services/data/v54.0/query/\(query)"
-        .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+    guard let fetchUrl = URL(string: "\(url)\(fetchQuery)")
+    else {
+      throw SSSDKError.invalidUrlError(url: host)
     }
-    guard let fetchUrl = URL(string: url)
+    return fetchUrl
+  }
+  ///  Creates URL for fetchData api for nextRecordsUrl
+  /// - Parameters:
+  ///     - config: The Salesforce instance’s configuration.
+  ///     - nextRecordsUrl: SOQL query to fetch the data.
+  /// - Throws: `SSSDKError.invalidUrlError` if the provided host url is invalid
+  /// - Returns: returns URL for fetchData api.
+  public static func fetchDataURL(config: SFConfig,
+                                  nextRecordsUrl: String) throws -> URL {
+    let host = verifyHost(host: config.host)
+    let url = "\(host)\(nextRecordsUrl)"
+    let fetchQuery = nextRecordsUrl.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+
+    guard let fetchUrl = URL(string: "\(url)\(fetchQuery)")
     else {
       throw SSSDKError.invalidUrlError(url: host)
     }
