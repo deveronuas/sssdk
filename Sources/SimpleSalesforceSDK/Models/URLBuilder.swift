@@ -85,7 +85,8 @@ public struct URLBuilder {
     let host = verifyHost(host: config.host)
     var url = "\(host)services/data/v54.0/query/?q="
     let queryPattern = "^SELECT\\s+(\\w+\\s*,\\s*)+\\w+\\s+FROM\\s+\\w+(\\s+WHERE\\s+.+)*\\s*(ORDER BY\\s+\\w+\\s+(ASC|DESC))?\\s*(LIMIT\\s+\\d+)?$"
-    if query.range(of: queryPattern, options: .regularExpression) != nil {
+    let queryIsValid = NSPredicate(format: "SELF MATCHES %@", queryPattern).evaluate(with: query)
+    if queryIsValid {
       url = "\(host)services/data/v54.0/query/?q=" + query
         .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
     } else {
