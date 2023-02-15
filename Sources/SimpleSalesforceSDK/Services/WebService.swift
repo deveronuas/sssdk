@@ -18,14 +18,14 @@ class WebService {
                         shouldRetry: Bool = true) async throws -> Data? {
     try await auth.refreshAccessTokenIfNeeded(config: config)
 
-    let fetchUrl = try URLBuilder.fetchDataURL(config: config, query: query)
+    let fetchUrl = try URLBuilder.fetchDataURL(config: config, query: query, isSOQlQuery: isSOQlQuery)
     let requestConfig = RequestConfig(url: fetchUrl, params: nil, method: .get, bearerToken: auth.bearerToken)
     let request = URLRequestBuilder.request(with: requestConfig)
 
     let (data, statusCode) = try await WebService.makeRequest(request, ignore401: true)
     if shouldRetry && statusCode == 401 {
       try await auth.refreshAccessToken(config: config)
-      return try await fetchData(config: config, auth: auth, query: query, shouldRetry: false)
+      return try await fetchData(config: config, auth: auth, query: query, isSOQlQuery: isSOQlQuery, shouldRetry: false)
     } else {
       return data
     }
