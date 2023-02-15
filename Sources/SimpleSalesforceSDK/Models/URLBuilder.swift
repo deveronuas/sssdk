@@ -83,7 +83,7 @@ public struct URLBuilder {
   public static func fetchDataURL(config: SFConfig,
                                   query: String) throws -> URL {
     let host = verifyHost(host: config.host)
-    var url = "\(host)services/data/v54.0/query/?q="
+    var url = ""
     let queryPattern = "^SELECT\\s+(\\w+\\s*,\\s*)+\\w+\\s+FROM\\s+\\w+(\\s+WHERE\\s+.+)*\\s*(ORDER BY\\s+\\w+\\s+(ASC|DESC))?\\s*(LIMIT\\s+\\d+)?$"
     let queryIsValid = NSPredicate(format: "SELF MATCHES %@", queryPattern).evaluate(with: query)
     if queryIsValid {
