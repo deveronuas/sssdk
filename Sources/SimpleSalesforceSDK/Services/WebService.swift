@@ -37,8 +37,8 @@ class WebService {
   ///   - shouldRetry: If true, the request will be retried on a 401 auth error from Salesforce after attempting to refresh the access token.
   /// - Returns: If the fetch succeeds, returns the data from Salesforce.
   static func fetchNextRecords(config: SFConfig, auth: SFAuth,
-                        nextRecordsUrl: String,
-                        shouldRetry: Bool = true) async throws -> Data? {
+                               nextRecordsUrl: String,
+                               shouldRetry: Bool = true) async throws -> Data? {
     try await auth.refreshAccessTokenIfNeeded(config: config)
 
     let fetchUrl = try URLBuilder.fetchNextRecordsURL(config: config,  nextRecordsUrl:  nextRecordsUrl)

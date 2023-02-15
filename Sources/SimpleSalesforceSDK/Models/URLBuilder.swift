@@ -99,7 +99,7 @@ public struct URLBuilder {
   /// - Throws: `SSSDKError.invalidUrlError` if the provided host url is invalid
   /// - Returns: returns URL for fetchData api.
   public static func fetchNextRecordsURL(config: SFConfig,
-                                  nextRecordsUrl: String) throws -> URL {
+                                         nextRecordsUrl: String) throws -> URL {
     let host = verifyHost(host: config.host)
     let url = "\(host)\(nextRecordsUrl)"
     let fetchQuery = url.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
