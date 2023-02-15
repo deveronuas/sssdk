@@ -83,10 +83,16 @@ public struct URLBuilder {
   public static func fetchDataURL(config: SFConfig,
                                   query: String) throws -> URL {
     let host = verifyHost(host: config.host)
-    let url = "\(host)services/data/v54.0/query/?q="
-    let fetchQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-
-    guard let fetchUrl = URL(string: "\(url)\(fetchQuery)")
+    var url = "\(host)services/data/v54.0/query/?q="
+    let queryPattern = "^SELECT\\s+(\\w+\\s*,\\s*)+\\w+\\s+FROM\\s+\\w+(\\s+WHERE\\s+.+)*$"
+    if query.range(of: queryPattern, options: .regularExpression) != nil {
+      url = "\(host)services/data/v54.0/query/?q="
+        .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+    } else {
+      url = "\(host)services/data/v54.0/query/\(query)"
+        .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+    }
+    guard let fetchUrl = URL(string: url)
     else {
       throw SSSDKError.invalidUrlError(url: host)
     }
