@@ -74,7 +74,7 @@ public struct URLBuilder {
     return revokeTokenUrl
   }
 
-  ///  Creates URL for fetchData api
+  ///  Creates URL for fetchData api for SOQL query
   /// - Parameters:
   ///     - config: The Salesforce instance’s configuration.
   ///     - query: SOQL query to fetch the data.
@@ -87,6 +87,24 @@ public struct URLBuilder {
     let fetchQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
 
     guard let fetchUrl = URL(string: "\(url)\(fetchQuery)")
+    else {
+      throw SSSDKError.invalidUrlError(url: host)
+    }
+    return fetchUrl
+  }
+  ///  Creates URL for fetchData api for nextRecordsUrl
+  /// - Parameters:
+  ///     - config: The Salesforce instance’s configuration.
+  ///     - nextRecordsUrl: SOQL query to fetch the data.
+  /// - Throws: `SSSDKError.invalidUrlError` if the provided host url is invalid
+  /// - Returns: returns URL for fetchData api.
+  public static func fetchNextRecordsURL(config: SFConfig,
+                                         nextRecordsUrl: String) throws -> URL {
+    let host = verifyHost(host: config.host)
+    let url = "\(host)\(nextRecordsUrl)"
+    let fetchQuery = url.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+
+    guard let fetchUrl = URL(string: "\(fetchQuery)")
     else {
       throw SSSDKError.invalidUrlError(url: host)
     }

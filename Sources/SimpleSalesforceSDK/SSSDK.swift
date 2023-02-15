@@ -133,6 +133,17 @@ public class SSSDK {
     return try await WebService.fetchData(config: config, auth: self.auth, query: query)
   }
 
+  /// Fetches data using nextRecordsUrl.
+  /// - Parameters:
+  ///     - nextRecordsUrl:  A string used to retrieve the next set of query results.
+  /// - Throws: `SSSDKError` errors
+  /// - Returns: `Data` results of the query returned by the salesforce server
+  public func fetchNextRecords(using nextRecordsUrl: String) async throws -> Data? {
+    let config = try fetchValidConfig()
+
+    return try await WebService.fetchNextRecords(config: config, auth: self.auth, nextRecordsUrl: nextRecordsUrl)
+  }
+
   /// Updates salesforce record using sObject
   /// - Parameters:
   ///     - objectName: Name of the object to update the record in.

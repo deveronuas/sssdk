@@ -12,7 +12,9 @@ class WebService {
   ///   - query: SOQL query to fetch the data.
   ///   - shouldRetry: If true, the request will be retried on a 401 auth error from Salesforce after attempting to refresh the access token.
   /// - Returns: If the fetch succeeds, returns the data from Salesforce.
-  static func fetchData(config: SFConfig, auth: SFAuth, query: String, shouldRetry: Bool = true) async throws -> Data? {
+  static func fetchData(config: SFConfig, auth: SFAuth,
+                        query: String,
+                        shouldRetry: Bool = true) async throws -> Data? {
     try await auth.refreshAccessTokenIfNeeded(config: config)
 
     let fetchUrl = try URLBuilder.fetchDataURL(config: config, query: query)
@@ -27,7 +29,30 @@ class WebService {
       return data
     }
   }
+  /// Requests data using nextRecordsUrl from Salesforce.
+  /// - Parameters:
+  ///   - config: Configuration for the Salesforce instance.
+  ///   - auth: Authentication for the Salesforce instance.
+  ///   - nextRecordsUrl: A string used to retrieve the next set of query results.
+  ///   - shouldRetry: If true, the request will be retried on a 401 auth error from Salesforce after attempting to refresh the access token.
+  /// - Returns: If the fetch succeeds, returns the data from Salesforce.
+  static func fetchNextRecords(config: SFConfig, auth: SFAuth,
+                               nextRecordsUrl: String,
+                               shouldRetry: Bool = true) async throws -> Data? {
+    try await auth.refreshAccessTokenIfNeeded(config: config)
 
+    let fetchUrl = try URLBuilder.fetchNextRecordsURL(config: config,  nextRecordsUrl:  nextRecordsUrl)
+    let requestConfig = RequestConfig(url: fetchUrl, params: nil, method: .get, bearerToken: auth.bearerToken)
+    let request = URLRequestBuilder.request(with: requestConfig)
+
+    let (data, statusCode) = try await WebService.makeRequest(request, ignore401: true)
+    if shouldRetry && statusCode == 401 {
+      try await auth.refreshAccessToken(config: config)
+      return try await fetchNextRecords(config: config, auth: auth,  nextRecordsUrl:  nextRecordsUrl, shouldRetry: false)
+    } else {
+      return data
+    }
+  }
   /// Updates the data using sObject Rows resource.
   /// - Parameters:
   ///     - config: Configuration for the Salesforce instance.
