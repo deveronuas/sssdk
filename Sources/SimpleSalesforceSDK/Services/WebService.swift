@@ -10,6 +10,7 @@ class WebService {
   ///   - config: Configuration for the Salesforce instance.
   ///   - auth: Authentication for the Salesforce instance.
   ///   - query: SOQL query to fetch the data.
+  ///   - isSOQL: If true, then it will add the query component in ?q= 
   ///   - shouldRetry: If true, the request will be retried on a 401 auth error from Salesforce after attempting to refresh the access token.
   /// - Returns: If the fetch succeeds, returns the data from Salesforce.
   static func fetchData(config: SFConfig, auth: SFAuth,

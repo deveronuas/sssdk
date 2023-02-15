@@ -125,6 +125,7 @@ public class SSSDK {
   /// Fetches data using SOQL query
   /// - Parameters:
   ///     - query: SOQL query to fetch the data.
+  ///     - isSOQL: If true, then it will add the query component in ?q= 
   /// - Throws: `SSSDKError` errors
   /// - Returns: `Data` results of the query returned by the salesforce server
   public func fetchData(by query: String, isSOQlQuery: Bool) async throws -> Data? {

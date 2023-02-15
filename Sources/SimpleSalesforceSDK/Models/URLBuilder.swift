@@ -78,6 +78,7 @@ public struct URLBuilder {
   /// - Parameters:
   ///     - config: The Salesforce instance’s configuration.
   ///     - query: SOQL query to fetch the data.
+  ///     - isSOQL: If true, then it will add the query component in ?q= 
   /// - Throws: `SSSDKError.invalidUrlError` if the provided host url is invalid
   /// - Returns: returns URL for fetchData api.
   public static func fetchDataURL(config: SFConfig,
