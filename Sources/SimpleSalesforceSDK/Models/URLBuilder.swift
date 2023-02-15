@@ -86,7 +86,7 @@ public struct URLBuilder {
     var url = "\(host)services/data/v54.0/query/?q="
     let queryPattern = "^SELECT\\s+(\\w+\\s*,\\s*)+\\w+\\s+FROM\\s+\\w+(\\s+WHERE\\s+.+)*$"
     if query.range(of: queryPattern, options: .regularExpression) != nil {
-      url = "\(host)services/data/v54.0/query/?q="
+      url = "\(host)services/data/v54.0/query/?q=" + query
         .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
     } else {
       url = "\(host)services/data/v54.0/query/\(query)"
