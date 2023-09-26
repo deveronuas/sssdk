@@ -29,6 +29,24 @@ class WebService {
       return data
     }
   }
+  
+  static func fetchUserInformation(config: SFConfig,
+                                   auth: SFAuth,
+                                   shouldRetry: Bool = true) async throws -> Data? {
+    try await auth.refreshAccessTokenIfNeeded(config: config)
+
+    let fetchUrl = try URLBuilder.fetchUserInformationURL(config: config)
+    let requestConfig = RequestConfig(url: fetchUrl, params: nil, method: .get, bearerToken: auth.bearerToken)
+    let request = URLRequestBuilder.request(with: requestConfig)
+
+    let (data, statusCode) = try await WebService.makeRequest(request, ignore401: true)
+    if shouldRetry && statusCode == 401 {
+      try await auth.refreshAccessToken(config: config)
+      return try await fetchUserInformation(config: config, auth: auth, shouldRetry: false)
+    } else {
+      return data
+    }
+  }
   /// Requests data using nextRecordsUrl from Salesforce.
   /// - Parameters:
   ///   - config: Configuration for the Salesforce instance.

@@ -202,6 +202,12 @@ public class SSSDK {
       fieldUpdates: fieldUpdates
     )
   }
+  
+  public func fetchUserInformation() async throws -> Data? {
+    let config = try fetchValidConfig()
+    
+    return try await WebService.fetchUserInformation(config: config, auth: self.auth)
+  }
 
   // MARK: - Utilities
   private func fetchValidConfig() throws -> SFConfig {

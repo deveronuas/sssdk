@@ -167,4 +167,14 @@ public struct URLBuilder {
     }
     return upsertUrl
   }
+  
+  public static func fetchUserInformationURL(config: SFConfig) throws -> URL {
+    let host = verifyHost(host: config.host)
+    let url = "\(host)services/oauth2/userinfo"
+    guard let fetchUrl = URL(string: "\(url)") else {
+      throw SSSDKError.invalidUrlError(url: host)
+    }
+    
+    return fetchUrl
+  }
 }
