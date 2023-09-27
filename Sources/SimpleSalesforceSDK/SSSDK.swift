@@ -203,6 +203,9 @@ public class SSSDK {
     )
   }
   
+  /// Fetches user information.
+  /// - Throws: An error if the user information retrieval fails.
+  /// - Returns: A Data object containing user information, or `nil` if no data is available.
   public func fetchUserInformation() async throws -> Data? {
     let config = try fetchValidConfig()
     

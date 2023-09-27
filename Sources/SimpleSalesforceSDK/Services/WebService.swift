@@ -30,6 +30,12 @@ class WebService {
     }
   }
   
+  /// Fetches user information.
+  /// - Parameters:
+  ///   - config: Configuration for the Salesforce instance.
+  ///   - auth: Authentication for the Salesforce instance.
+  ///   - shouldRetry: If true, the request will be retried on a 401 auth error from Salesforce after attempting to refresh the access token.
+  /// - Returns: If the fetch succeeds, returns the user information from Salesforce.
   static func fetchUserInformation(config: SFConfig,
                                    auth: SFAuth,
                                    shouldRetry: Bool = true) async throws -> Data? {
