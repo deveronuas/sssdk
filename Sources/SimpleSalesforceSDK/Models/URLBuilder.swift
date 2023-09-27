@@ -167,4 +167,19 @@ public struct URLBuilder {
     }
     return upsertUrl
   }
+  
+  ///  Creates URL for fetching user information based on the provided Salesforce instance's configuration.
+  /// - Parameters:
+  ///     - config: The Salesforce instance’s configuration.
+  /// - Throws: `SSSDKError.invalidUrlError` if the provided host url is invalid
+  /// - Returns: returns URL for fetching user information.
+  public static func fetchUserInformationURL(config: SFConfig) throws -> URL {
+    let host = verifyHost(host: config.host)
+    let url = "\(host)services/oauth2/userinfo"
+    guard let fetchUrl = URL(string: "\(url)") else {
+      throw SSSDKError.invalidUrlError(url: host)
+    }
+    
+    return fetchUrl
+  }
 }

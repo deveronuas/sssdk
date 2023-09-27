@@ -29,6 +29,30 @@ class WebService {
       return data
     }
   }
+  
+  /// Fetches user information.
+  /// - Parameters:
+  ///   - config: Configuration for the Salesforce instance.
+  ///   - auth: Authentication for the Salesforce instance.
+  ///   - shouldRetry: If true, the request will be retried on a 401 auth error from Salesforce after attempting to refresh the access token.
+  /// - Returns: If the fetch succeeds, returns the user information from Salesforce.
+  static func fetchUserInformation(config: SFConfig,
+                                   auth: SFAuth,
+                                   shouldRetry: Bool = true) async throws -> Data? {
+    try await auth.refreshAccessTokenIfNeeded(config: config)
+
+    let fetchUrl = try URLBuilder.fetchUserInformationURL(config: config)
+    let requestConfig = RequestConfig(url: fetchUrl, params: nil, method: .get, bearerToken: auth.bearerToken)
+    let request = URLRequestBuilder.request(with: requestConfig)
+
+    let (data, statusCode) = try await WebService.makeRequest(request, ignore401: true)
+    if shouldRetry && statusCode == 401 {
+      try await auth.refreshAccessToken(config: config)
+      return try await fetchUserInformation(config: config, auth: auth, shouldRetry: false)
+    } else {
+      return data
+    }
+  }
   /// Requests data using nextRecordsUrl from Salesforce.
   /// - Parameters:
   ///   - config: Configuration for the Salesforce instance.
